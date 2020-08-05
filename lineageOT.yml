@@ -1,0 +1,20 @@
+name: lineageOT
+channels:
+  - defaults
+  - conda-forge
+  - etetoolkit
+dependencies:
+  - anndata
+  - cvxopt
+  - ete3
+  - ete_toolchain
+  - jupyter
+  - networkx
+  - numpy
+  - pandas
+  - pip
+  - pot
+  - pytest
+  - pip:
+    - scanpy
+
