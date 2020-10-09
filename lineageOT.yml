@@ -4,17 +4,16 @@ channels:
   - conda-forge
   - etetoolkit
 dependencies:
-  - anndata
-  - cvxopt
-  - ete3
-  - ete_toolchain
-  - jupyter
-  - networkx
-  - numpy
-  - pandas
-  - pip
-  - pot
-  - pytest
+  - anndata>=0.7.4
+  - cvxopt>=1.2.0
+  - ete3>=3.1.1
+  - ete_toolchain>=3.0.0
+  - jupyter>=1.0.0
+  - networkx>=2.4
+  - numpy>=1.19.1
+  - pandas>=1.0.5
+  - pip>=20.1.1
+  - pot>=0.7.0
   - pip:
-    - scanpy
+    - scanpy>=1.5.1
 
