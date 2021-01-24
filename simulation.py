@@ -33,7 +33,7 @@ class SimulationParameters:
 
         self.timestep = timestep
         self.diffusion_constant = diffusion_constant
-        if flow_type in {'mismatched_clusters', 'convergent'}:
+        if flow_type in {'mismatched_clusters', 'convergent', 'partial_convergent'}:
             self.diffusion_matrix = np.diag(np.sqrt(diffusion_constant)*np.ones(num_genes))
             self.diffusion_matrix[0, 0] = 0.005*np.sqrt(x0_speed) #small diffusion in 'time' dimension
         else:
@@ -148,7 +148,7 @@ def mismatched_clusters_flow(x, params):
         return v
 
 
-def convergent_flow(x, params):
+def partial_convergent_flow(x, params):
     """
     Single bifurcation followed by bifurcation of each cluster,
     where two of the new clusters subsequently merge
@@ -186,6 +186,28 @@ def convergent_flow(x, params):
 
 
 
+def convergent_flow(x, params):
+    """
+    Single bifurcation followed by convergence of the two clusters
+    """
+
+    v = np.zeros(x.shape)
+    v[0] = params.x0_speed
+
+    if x[0] < 2:
+        # First bifurcation
+        v[1] = -x[1]**3 + x[0]*x[1]
+        return v
+    else:
+        # Convergence
+        v[1] = -0.6*x[1]*params.x0_speed
+        return v
+
+
+
+
+
+
 
 def vector_field(x, params):
     """
@@ -196,6 +218,8 @@ def vector_field(x, params):
         return single_bifurcation_flow(x)
     elif params.flow_type == "mismatched_clusters":
         return mismatched_clusters_flow(x, params)
+    elif params.flow_type == "partial_convergent":
+        return partial_convergent_flow(x, params)
     elif params.flow_type == "convergent":
         return convergent_flow(x, params)
     else:
