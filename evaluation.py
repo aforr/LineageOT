@@ -149,7 +149,7 @@ def expand_coupling(c, true_coupling, distances, matched_dim = 0, max_dims_used 
     
     if abs(np.sum(expanded_coupling) - 1) > 10**(-8):
         warnings.warn(("Expanded coupling not computed correctly. " +
-                       "Check for infeasibility in row and column OT calculations. Updating the python optimal transport package may help (POT issue #93).\n" +
+                       "Check for infeasibility in row and column OT calculations. Updating the python optimal transport package may help (https://github.com/PythonOT/POT/issues/93).\n" +
                        "If total mass - 1 is small, this may not significantly affect downstream results.\n" +
                        "Total mass - 1: " +
                        str(np.sum(expanded_coupling) -1)))
