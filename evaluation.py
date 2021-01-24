@@ -263,7 +263,7 @@ def print_metrics(couplings, cost_func, cost_func_name, log = False):
     return
 
 
-def plot_metrics(couplings, cost_func, cost_func_name, epsilons, log = False, points=False, scale=1.0):
+def plot_metrics(couplings, cost_func, cost_func_name, epsilons, log = False, points=False, scale=1.0, label_font_size=18, tick_font_size=12):
     """
     Plots cost_func evaluated as a function of epsilon
     """
@@ -287,10 +287,14 @@ def plot_metrics(couplings, cost_func, cost_func_name, epsilons, log = False, po
         if points:
             plt.scatter([zero_offset], [cost_func(couplings["lineageOT, fitted"])/scale])
         all_ys.append(ys)
-    
-    plt.ylabel(cost_func_name)
-    plt.xlabel("Entropy parameter")
+
+    plt.ylabel(cost_func_name, fontsize=label_font_size)
+    plt.xlabel("Entropy parameter", fontsize=label_font_size)
     plt.xscale("log")
+
+    plt.xticks(fontsize=tick_font_size)
+    plt.yticks(fontsize=tick_font_size)
+
     if points:
         plt.xlim([0.9*zero_offset, epsilons[-1]])
     else:
@@ -299,6 +303,6 @@ def plot_metrics(couplings, cost_func, cost_func_name, epsilons, log = False, po
     ylims = plt.ylim([0, None])
     # upper limit should be at least 1
     plt.ylim([0, max(ylims[1], 1)])
-                 
-    plt.legend()
+
+    plt.legend(fontsize=tick_font_size)
     return all_ys
