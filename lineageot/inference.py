@@ -7,7 +7,7 @@ from cvxopt.solvers import qp as cvxopt_qp
 from cvxopt import matrix as cvxopt_matrix
 from numbers import Number
 
-from simulation import *
+from lineageot.simulation import *
 
 
 
