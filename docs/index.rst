@@ -7,16 +7,24 @@ Welcome to LineageOT's documentation!
 =====================================
 
 
-The source code for LineageOT is available at https://github.com/aforr/lineageOT.
+The source code for LineageOT is available at https://github.com/aforr/LineageOT.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   core
    simulation
    inference
    evaluation
 
+Core pipeline
+-------------
+.. automodule:: lineageot.core
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :noindex:
 
 Indices and tables
 ==================
