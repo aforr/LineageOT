@@ -1,13 +1,15 @@
 # Functions for handling trees and coupling inference
 
+import copy
 import ete3
+import numpy as np
 import networkx as nx
 import warnings
 from cvxopt.solvers import qp as cvxopt_qp
 from cvxopt import matrix as cvxopt_matrix
 from numbers import Number
 
-from lineageot.simulation import *
+import lineageot.simulation as sim
 
 
 
@@ -89,7 +91,7 @@ def list_tree_to_digraph(list_tree):
                                                                                          next_leaf_node)
 
     barcode_length = len(T.nodes[0]['cell'].barcode)
-    T.add_node('root', cell=Cell(np.nan, np.zeros(barcode_length)), time_to_parent = 0)
+    T.add_node('root', cell=sim.Cell(np.nan, np.zeros(barcode_length)), time_to_parent = 0)
     T.add_edge('root', subtree_root, time=T.nodes[subtree_root]['time_to_parent'])
 
     return T
@@ -167,8 +169,8 @@ def add_leaf_barcodes(tree, barcode_array):
         if 'cell' in tree.nodes[cell]:
             tree.nodes[cell]['cell'].barcode = barcode_array[cell, :]
         else:
-            tree.nodes[cell]['cell'] = Cell(np.nan, barcode_array[cell, :])
-    tree.nodes['root']['cell'] = Cell(np.nan, np.zeros(barcode_array.shape[1]))
+            tree.nodes[cell]['cell'] = sim.Cell(np.nan, barcode_array[cell, :])
+    tree.nodes['root']['cell'] = sim.Cell(np.nan, np.zeros(barcode_array.shape[1]))
     return tree
 
 def add_leaf_x(tree, x_array):
@@ -180,7 +182,7 @@ def add_leaf_x(tree, x_array):
         if 'cell' in tree.nodes[cell]:
             tree.nodes[cell]['cell'].x = x_array[cell, :]
         else:
-            tree.nodes[cell]['cell'] = Cell(x_array[cell, :], np.nan)
+            tree.nodes[cell]['cell'] = sim.Cell(x_array[cell, :], np.nan)
     return tree
 
     
@@ -217,7 +219,7 @@ def recursive_add_barcodes(tree, current_node):
             current_barcode[(child_barcodes[0] != child_barcodes[1]) &
                             (child_barcodes[1] != -1)] = 0
         
-        tree.nodes[current_node]['cell'] = Cell(np.nan, current_barcode)
+        tree.nodes[current_node]['cell'] = sim.Cell(np.nan, current_barcode)
         return
 
 
@@ -551,7 +553,7 @@ def truncate_tree(tree, new_end_time, params, inplace = False, current_node = 'r
         initial_cell = tree.nodes[parent]['cell'].deepcopy()
         initial_cell.seed = tree.nodes[current_node]['cell'].seed
 
-        new_cell = evolve_cell(initial_cell, 
+        new_cell = sim.evolve_cell(initial_cell, 
                                new_end_time - tree.nodes[parent]['time'],
                                params)
 
@@ -614,7 +616,7 @@ def resample_cells(tree, params, current_node = 'root', inplace = False):
         initial_cell = tree.nodes[current_node]['cell'].deepcopy()
         initial_cell.reset_seed()
         
-        tree.nodes[child]['cell'] = evolve_cell(initial_cell,
+        tree.nodes[child]['cell'] = sim.evolve_cell(initial_cell,
                                                tree.nodes[child]['time_to_parent'],
                                                params)
         resample_cells(tree, params, current_node = child, inplace = True)
