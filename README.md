@@ -1,7 +1,7 @@
 # LineageOT
 
 
-This code accompanies the paper https://biorxiv.org/cgi/content/short/2020.07.31.231621v2
+This code accompanies the paper https://biorxiv.org/cgi/content/short/2020.07.31.231621v2. Documentation is available at https://lineageot.readthedocs.io/.
 
 
 ### Requirements and installation guide
