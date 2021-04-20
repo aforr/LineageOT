@@ -114,17 +114,25 @@ def expand_coupling_independent(c, true_coupling):
 
 def expand_coupling(c, true_coupling, distances, matched_dim = 0, max_dims_used = np.inf, xs_used = None):
     """
-    Parameters:
-    - coupling c between x and y
-    - coupling true_coupling between x and z
-    - distances between z and y
-    - dimension to match on
-    - max_dims_used: set a finite value here to do an approximate calculation
-      based on min(len(x), max_dims_used) elements of x
-    - xs_used: indices of matched_dim to use in approximate calculation
+    Parameters
+    ----------
+    c : ndarray, shape (nx, ny) if matched_dim == 0, (ny, nx) if matched_dim == 1
+        Coupling between source x and target y
+    true_coupling : ndarray, shape (nx, nz) if matched_dim == 0, (nz, nx) if matched_dim == 1
+        Reference coupling between x and z
+    distances : ndarray, shape (nz, ny)
+        Pairwise distances between z and y
+    matched_dim : int
+        Dimension in which c and true coupling
+    max_dims_used: int or np.inf
+        Set a finite value here to do an approximate calculation based on min(nx, max_dims_used) elements of x
+    xs_used : list or None
+        Indices of matched_dim to use in approximate calculation. If None and max_dims_used<nx, indices are randomly selected.
     
-    Returns:
-    - optimal coupling between z and y
+    Returns
+    -------
+    expanded_coupling : ndarray, shape same as true_couplings
+        Optimal coupling between z and y consistent with the coupling c
     """
     if matched_dim == 1:
         c = c.T
