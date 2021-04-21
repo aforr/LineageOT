@@ -8,6 +8,7 @@ import warnings
 from cvxopt.solvers import qp as cvxopt_qp
 from cvxopt import matrix as cvxopt_matrix
 from numbers import Number
+import sys
 
 import lineageot.simulation as sim
 
@@ -888,7 +889,17 @@ def neighbor_join(distance_matrix):
     node = NeighborJoinNode(subtree, 'root', True)
     leaf_nodes.append(node)
 
-    return recursive_neighbor_join(distance_matrix, leaf_nodes, -1)
+    initial_recursion_limit = sys.getrecursionlimit()
+    if n > initial_recursion_limit:
+        warnings.warn("Temporarily increasing recursion limit for neighbor joining.")
+        sys.setrecursionlimit(n + 50) # number of nodes plus an arbitary buffer
+
+    fitted_tree = recursive_neighbor_join(distance_matrix, leaf_nodes, -1)
+
+    if n > initial_recursion_limit:
+        sys.setrecursionlimit(initial_recursion_limit)
+
+    return fitted_tree
 
 
 def recursive_neighbor_join(distance_matrix, nodes, next_node_to_add):
