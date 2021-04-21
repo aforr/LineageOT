@@ -68,7 +68,7 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
     time_2 : Number
         The later time point in adata. All times are relative to the root of the tree.
     lineage_tree_t2 : Networkx DiGraph
-        The lineage tree fitted to cells at time_2. Nodes should already be annotated with times Annotations related to cell state will be added. 
+        The lineage tree fitted to cells at time_2. Nodes should already be annotated with times. Annotations related to cell state will be added. 
     time_key : str (default 'time')
         Key in adata.obs and lineage_tree_t2 containing cells' time labels
     state_key : str (default None)
@@ -134,8 +134,8 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
 def save_coupling_as_tmap(coupling, time_1, time_2, tmap_out):
     """
     Saves a LineageOT coupling for downstream analysis with Waddington-OT. 
-    A sequence of saved couplings can be loaded in wot with 
-    `wot.tmap.TransportMapModel.from_directory(save_directory)`
+    A sequence of saved couplings can be loaded in ``wot`` with 
+    ``wot.tmap.TransportMapModel.from_directory(save_directory)``
 
     Parameters
     ----------

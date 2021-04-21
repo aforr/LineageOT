@@ -6,17 +6,19 @@
 Welcome to LineageOT's documentation!
 =====================================
 
+LineageOT is a package for analyzing lineage-traced single-cell sequencing time series. For full details, see our `paper <https://www.biorxiv.org/content/10.1101/2020.07.31.231621v2>`_.
 
-The source code for LineageOT is available at https://github.com/aforr/LineageOT.
+All of the functionality required for running LineageOT is in the ``core`` module. The remaining modules have implementation functions and code for reproducing analyses in the paper.
+
+The source code, with installation instructions and examples, is available at https://github.com/aforr/LineageOT.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   core
-   simulation
-   inference
-   evaluation
+   modules
+   auto_examples/index
+
 
 Core pipeline
 -------------
@@ -25,10 +27,3 @@ Core pipeline
    :undoc-members:
    :show-inheritance:
    :noindex:
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
