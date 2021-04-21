@@ -44,7 +44,7 @@ sim_params = sim.SimulationParameters(division_time_std = 0.01*timescale,
                                      )
 
 mean_x0_early = 2
-time_early = 7.4*timescale # Time when early cells are sampled
+time_early = 4*timescale # Time when early cells are sampled
 time_late = time_early + 4*timescale # Time when late cells are sampled
 x0_initial = mean_x0_early -time_early*x0_speed
 initial_cell = sim.Cell(np.array([x0_initial, 0, 0]), np.zeros(sim_params.barcode_length))
@@ -108,10 +108,7 @@ plt.legend();
 
 ###############################################################################
 # Since these are simulations, we can compute and plot inferred ancestor locations based on the true tree.
-# Cells in orange are from the late time point with ancestors on the left; 
-# cells in green are from the late time point with ancestors on the right.
-# Though the green and orange distributions substantially overlap, the estimated ancestor distributions
-# in red and purple are nearly disjoint.
+#
 
 # Infer ancestor locations for the late cells based on the true lineage tree
 observed_nodes = [n for n in sim_inf.get_leaves(true_trees['late, annotated'], include_root=False)]
@@ -138,6 +135,12 @@ plt.legend();
 ###############################################################################
 # To better visualize cases where there were two clusters at the early time point,
 # we can color the late cells (and their inferred ancestors) by their cluster of origin
+# Cells in orange are from the late time point with ancestors on the left; 
+# cells in green are from the late time point with ancestors on the right.
+# Though the green and orange distributions substantially overlap, the estimated ancestor distributions
+# in red and purple are separate.
+#
+
 is_from_left = sim_inf.extract_ancestor_data_arrays(true_trees['late'], sample_times['early'], sim_params)[0][:,1] < 0
 for a,label in zip([rna_arrays['early'], rna_arrays['late'][is_from_left,:], rna_arrays['late'][~is_from_left,:]], ['Early cells', 'Late cells from left', 'Late cells from right']):
     plt.scatter(a[:, 1], a[:, 2], alpha = 0.4)
