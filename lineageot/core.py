@@ -135,7 +135,7 @@ def save_coupling_as_tmap(coupling, time_1, time_2, tmap_out):
     """
     Saves a LineageOT coupling for downstream analysis with Waddington-OT. 
     A sequence of saved couplings can be loaded in ``wot`` with 
-    ``wot.tmap.TransportMapModel.from_directory(save_directory)``
+    ``wot.tmap.TransportMapModel.from_directory(tmap_out)``
 
     Parameters
     ----------
