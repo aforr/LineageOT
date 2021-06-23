@@ -18,6 +18,12 @@ Installation may take a few minutes. Activate the environment with
 ```
 conda activate lineageOT
 ```
+If you are using pip and not Anaconda, install dependencies with
+```
+pip install numpy cython
+pip install -r pip_requirements.txt
+```
+
 ##### Installing LineageOT
 Once you have set up and activated the environment, install the most recent LineageOT by running
 ```
