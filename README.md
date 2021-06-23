@@ -5,27 +5,32 @@ This code accompanies the paper https://biorxiv.org/cgi/content/short/2020.07.31
 
 
 ### Requirements and installation guide
+##### Installing dependencies
 First, clone this repository with
 ```
 git clone https://github.com/aforr/LineageOT
 ```
-Dependencies are listed in lineageOT.yml; earlier versions of the packages may work but have not been tested. If you are using Anaconda, they can be installed with 
+Dependencies are listed in `conda_requirements.yml` as well as in `pip_requirements.txt`; earlier versions of the packages may work but have not been tested. If you are using Anaconda, they can be installed with 
 ```
-conda env create -f lineageOT.yml
+conda env create -f conda_requirements.yml
 ```
 Installation may take a few minutes. Activate the environment with
 ```
 conda activate lineageOT
 ```
-Once you have set up the environment, install LineageOT by running
+##### Installing LineageOT
+Once you have set up and activated the environment, install the most recent LineageOT by running
 ```
 pip install .
 ```
-from the repository's base directory.
+from the repository's base directory. Alternatively, install from PyPI with
+```
+pip install lineageot
+```
 
 
 
-No specific operating system is required, though there may be a bug in one of the dependencies in certain versions of MacOS (https://github.com/PythonOT/POT/issues/93). The code has been tested on OS X 10.14.6 and Ubuntu 16.4.
+No specific operating system is required, though there may be a bug in one of the dependencies in certain versions of MacOS (https://github.com/PythonOT/POT/issues/93). The code has been tested on OS X 10.14.6 and Ubuntu 16.04.
 
 
 

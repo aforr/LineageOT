@@ -5,4 +5,9 @@
 
 *.ipynb_checkpoints
 
-*_build
+docs/_build
+
+build
+dist
+docs/auto_examples
+*egg-info
