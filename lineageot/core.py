@@ -31,24 +31,26 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', method = 'neighbor join'):
         A fitted lineage tree
     """
 
-    # compute distances
-    barcode_length = adata.obsm[barcodes_key].shape[1]
-    # last row is (unobserved) root of the tree
-    lineage_distances = inf.barcode_distances(np.concatenate([adata.obsm[barcodes_key], np.zeros([1,barcode_length])]))
-
-    # compute tree
-    fitted_tree = inf.neighbor_join(lineage_distances)
-
-    # annotate tree with node times
-    inf.add_leaf_barcodes(fitted_tree, adata.obsm[barcodes_key])
-    inf.add_leaf_times(fitted_tree, time)
-
-    # Estimating a uniform mutation rate for all target sites
-    rate_estimate = inf.rate_estimator(adata.obsm[barcodes_key], time)
-    inf.annotate_tree(fitted_tree, 
-                      rate_estimate*np.ones(barcode_length),
-                      time_inference_method = 'least_squares');
-
+    if method == "neighbor join":
+        # compute distances
+        barcode_length = adata.obsm[barcodes_key].shape[1]
+        # last row is (unobserved) root of the tree
+        lineage_distances = inf.barcode_distances(np.concatenate([adata.obsm[barcodes_key], np.zeros([1,barcode_length])]))
+        
+        # compute tree
+        fitted_tree = inf.neighbor_join(lineage_distances)
+        
+        # annotate tree with node times
+        inf.add_leaf_barcodes(fitted_tree, adata.obsm[barcodes_key])
+        inf.add_leaf_times(fitted_tree, time)
+        
+        # Estimating a uniform mutation rate for all target sites
+        rate_estimate = inf.rate_estimator(adata.obsm[barcodes_key], time)
+        inf.annotate_tree(fitted_tree, 
+                          rate_estimate*np.ones(barcode_length),
+                          time_inference_method = 'least_squares');
+    else:
+        raise ValueError("'" + method + "' is not an available method for fitting trees.")
 
     return fitted_tree
 
