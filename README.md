@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/285346865.svg)](https://zenodo.org/badge/latestdoi/285346865) 
 
-This code accompanies the paper https://biorxiv.org/cgi/content/short/2020.07.31.231621v2. Documentation is available at https://lineageot.readthedocs.io/.
+This code accompanies the paper https://www.nature.com/articles/s41467-021-25133-1. Documentation is available at https://lineageot.readthedocs.io/.
 
 
 ### Requirements and installation guide
