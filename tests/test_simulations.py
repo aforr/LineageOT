@@ -1,6 +1,6 @@
 
 import pytest
-import BarcodeOT.Code.Simulations.simulation as sim
+import lineageot.simulation as sim
 import numpy as np
 
 
