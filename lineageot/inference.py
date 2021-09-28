@@ -940,57 +940,6 @@ def neighbor_join(distance_matrix):
     return fitted_tree
 
 
-def recursive_neighbor_join(distance_matrix, nodes, next_node_to_add):
-    """
-    Recursive helper function for neighbor joining
-
-    distance_matrix:  array of pairwise distances between nodes
-    nodes:            list of NeighborJoinNode nodes to be joined
-    next_node_to_add: integer label of next node to add (negative)
-    """
-
-    # Base case: if there are three nodes, join them all
-    # (and return only the tree)
-    if len(nodes) == 3:
-        distances = distances_to_joined_node(distance_matrix, [0,1])
-        last_join = join_nodes(nodes[0], nodes[1], next_node_to_add, distances)
-        next_node_to_add = next_node_to_add - 1
-        
-        last_edge_distance = (distance_matrix[2, 0] 
-                              + distance_matrix[2, 1]
-                              - distance_matrix[1, 0])/2
-        T = nx.compose(nodes[2].subtree, last_join.subtree)
-
-        if last_join.has_global_root:
-            assert(not nodes[2].has_global_root)
-            T.add_edge(last_join.subtree_root, nodes[2].subtree_root)
-            T.nodes[nodes[2].subtree_root]['time_to_parent'] = last_edge_distance
-        else:
-            assert(nodes[2].has_global_root)
-            T.add_edge(nodes[2].subtree_root, last_join.subtree_root)
-            T.nodes[last_join.subtree_root]['time_to_parent'] = last_edge_distance
-        return T
-
-    # Compute Q matrix
-    Q = compute_q_matrix(distance_matrix)
-
-    # Pick nodes to join
-    nodes_to_join = pick_joined_nodes(Q)
-
-    distances = distances_to_joined_node(distance_matrix, nodes_to_join)
-
-    # Remove those nodes and add merged node
-    new_node = join_nodes(nodes[nodes_to_join[0]], nodes[nodes_to_join[1]], next_node_to_add, distances)
-    next_node_to_add = next_node_to_add - 1
-
-    new_nodes = [nodes[i] for i in range(len(nodes)) if i not in nodes_to_join]
-    new_nodes.append(new_node)
-
-    # Compute new distances
-    new_distances = compute_new_distances(distance_matrix, nodes_to_join)
-
-    return recursive_neighbor_join(new_distances, new_nodes, next_node_to_add)
-
         
 
 def distances_to_joined_node(distance_matrix, nodes_to_join):
