@@ -177,31 +177,6 @@ class Test_Tree_Discrepancy():
         
 
 
-
-
-class Test_Tree_Likelihood():
-    """
-    Testing calculation of tree likelihood
-    """
-
-
-    def test_likelihood_returns_float(self):
-        distances = np.array([[ 0.0, 1, 1],
-                              [ 1.0, 0, 1],
-                              [ 1.0, 1, 0]])
-        barcodes = np.array([[1, 0, 3, 3],
-                             [2, 0, 3, 3]])
-        mutation_rates = np.ones(4)*0.5
-        relative_mutation_rates = [np.array([0,1,1,1])/3 for _ in range(4)]
-
-        tree = lineageot.inference.neighbor_join(distances)
-        lineageot.inference.add_leaf_barcodes(tree, barcodes)
-        lineageot.inference.add_leaf_times(tree, 2)
-        lineageot.inference.annotate_tree(tree, mutation_rates, time_inference_method = 'least_squares')
-
-        
-        assert(type(lineageot.inference.tree_log_likelihood(tree, mutation_rates, relative_mutation_rates))
-               is np.double)
         
         
     
