@@ -8,7 +8,6 @@ import warnings
 from cvxopt.solvers import qp as cvxopt_qp
 from cvxopt import matrix as cvxopt_matrix
 from numbers import Number
-import sys
 
 import lineageot.simulation as sim
 
@@ -877,81 +876,69 @@ def neighbor_join(distance_matrix):
     """
     n = distance_matrix.shape[0]
 
-    leaf_nodes = []
+    assert(n >= 3) # no need to bother with neighbor joining if one or two nodes
+
+    unjoined_nodes = []
     for i in range(n-1):
         subtree = nx.DiGraph()
         subtree.add_node(i)
         node = NeighborJoinNode(subtree, i, False)
-        leaf_nodes.append(node)
+        unjoined_nodes.append(node)
 
     subtree = nx.DiGraph()
     subtree.add_node('root')
     node = NeighborJoinNode(subtree, 'root', True)
-    leaf_nodes.append(node)
+    unjoined_nodes.append(node)
 
-    initial_recursion_limit = sys.getrecursionlimit()
-    if n > initial_recursion_limit:
-        warnings.warn("Temporarily increasing recursion limit for neighbor joining.")
-        sys.setrecursionlimit(n + 50) # number of nodes plus an arbitary buffer
+    next_node_to_add = -1 # integer label of next node to add, will count down
+    # (leaf nodes have positive integer labels, root is labeled 'root')
 
-    fitted_tree = recursive_neighbor_join(distance_matrix, leaf_nodes, -1)
+    while len(unjoined_nodes) > 3:
+        # recursive part of neighbor joining algorithm
 
-    if n > initial_recursion_limit:
-        sys.setrecursionlimit(initial_recursion_limit)
+        # Compute Q matrix
+        Q = compute_q_matrix(distance_matrix)
 
-    return fitted_tree
+        # Pick nodes to join
+        nodes_to_join = pick_joined_nodes(Q)
+        
+        distances = distances_to_joined_node(distance_matrix, nodes_to_join)
 
-
-def recursive_neighbor_join(distance_matrix, nodes, next_node_to_add):
-    """
-    Recursive helper function for neighbor joining
-
-    distance_matrix:  array of pairwise distances between nodes
-    nodes:            list of NeighborJoinNode nodes to be joined
-    next_node_to_add: integer label of next node to add (negative)
-    """
-
-    # Base case: if there are three nodes, join them all
-    # (and return only the tree)
-    if len(nodes) == 3:
-        distances = distances_to_joined_node(distance_matrix, [0,1])
-        last_join = join_nodes(nodes[0], nodes[1], next_node_to_add, distances)
+        # Remove those nodes and add merged node
+        new_node = join_nodes(unjoined_nodes[nodes_to_join[0]], unjoined_nodes[nodes_to_join[1]], next_node_to_add, distances)
         next_node_to_add = next_node_to_add - 1
         
-        last_edge_distance = (distance_matrix[2, 0] 
-                              + distance_matrix[2, 1]
-                              - distance_matrix[1, 0])/2
-        T = nx.compose(nodes[2].subtree, last_join.subtree)
+        unjoined_nodes = [unjoined_nodes[i] for i in range(len(unjoined_nodes)) if i not in nodes_to_join]
+        unjoined_nodes.append(new_node)
 
-        if last_join.has_global_root:
-            assert(not nodes[2].has_global_root)
-            T.add_edge(last_join.subtree_root, nodes[2].subtree_root)
-            T.nodes[nodes[2].subtree_root]['time_to_parent'] = last_edge_distance
-        else:
-            assert(nodes[2].has_global_root)
-            T.add_edge(nodes[2].subtree_root, last_join.subtree_root)
-            T.nodes[last_join.subtree_root]['time_to_parent'] = last_edge_distance
-        return T
+        # Compute new distances
+        distance_matrix = compute_new_distances(distance_matrix, nodes_to_join)
 
-    # Compute Q matrix
-    Q = compute_q_matrix(distance_matrix)
 
-    # Pick nodes to join
-    nodes_to_join = pick_joined_nodes(Q)
 
-    distances = distances_to_joined_node(distance_matrix, nodes_to_join)
-
-    # Remove those nodes and add merged node
-    new_node = join_nodes(nodes[nodes_to_join[0]], nodes[nodes_to_join[1]], next_node_to_add, distances)
+    # only three remaining nodes now; join an arbitrary two of them directly
+    distances = distances_to_joined_node(distance_matrix, [0,1])
+    last_join = join_nodes(unjoined_nodes[0], unjoined_nodes[1], next_node_to_add, distances)
     next_node_to_add = next_node_to_add - 1
+    
+    last_edge_distance = (distance_matrix[2, 0] 
+                          + distance_matrix[2, 1]
+                          - distance_matrix[1, 0])/2
+    fitted_tree = nx.compose(unjoined_nodes[2].subtree, last_join.subtree)
+    
+    # add 'time_to_parent' to the node that is not the root
+    if last_join.has_global_root:
+        assert(not unjoined_nodes[2].has_global_root)
+        fitted_tree.add_edge(last_join.subtree_root, unjoined_nodes[2].subtree_root)
+        fitted_tree.nodes[unjoined_nodes[2].subtree_root]['time_to_parent'] = last_edge_distance
+    else:
+        assert(unjoined_nodes[2].has_global_root)
+        fitted_tree.add_edge(unjoined_nodes[2].subtree_root, last_join.subtree_root)
+        fitted_tree.nodes[last_join.subtree_root]['time_to_parent'] = last_edge_distance
 
-    new_nodes = [nodes[i] for i in range(len(nodes)) if i not in nodes_to_join]
-    new_nodes.append(new_node)
+    
+    return fitted_tree
 
-    # Compute new distances
-    new_distances = compute_new_distances(distance_matrix, nodes_to_join)
-
-    return recursive_neighbor_join(new_distances, new_nodes, next_node_to_add)
 
         
 
