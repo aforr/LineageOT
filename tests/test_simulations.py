@@ -91,6 +91,7 @@ class Test_Simulation_Output_Properties():
     def test_getting_exactly_target_number_of_cells(self):
         self.params.target_num_cells = 230
         self.params.mean_division_time = 1
+        self.params.keep_tree = False
 
         initial_cell = sim.sample_cell(self.params)
         sample = sim.sample_descendants(initial_cell, 10, self.params)
