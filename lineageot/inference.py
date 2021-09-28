@@ -386,15 +386,17 @@ def add_node_times_from_dict(tree, current_node, time_dict):
 
     return
 
-def add_node_times_from_division_times(tree, current_node = 'root'):
+def add_node_times_from_division_times(tree, current_node = 'root', overwrite = False):
     """
     Adds 'time' variable to all descendants of current_node based on the 'time_to_parent' variable
     """
     if current_node == 'root':
-        tree.nodes[current_node]['time'] = 0
+        if overwrite | (not 'time' in tree.nodes[current_node]):
+            tree.nodes[current_node]['time'] = 0
     else:
         parent = next(tree.predecessors(current_node))
-        tree.nodes[current_node]['time'] = tree.nodes[parent]['time'] + tree.nodes[current_node]['time_to_parent']
+        if overwrite | (not 'time' in tree.nodes[current_node]):
+            tree.nodes[current_node]['time'] = tree.nodes[parent]['time'] + tree.nodes[current_node]['time_to_parent']
 
     children = tree.successors(current_node)
     for child in children:
