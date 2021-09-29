@@ -874,7 +874,7 @@ def make_tree_from_nonnested_clones(clone_matrix, time, root_time_factor = 1000)
     fitted_tree = nx.DiGraph()
 
     n_cells, n_clones = clone_matrix.shape
-    clone_labels = range(-1, -n_clones - 1, -1) # negative so distinct from cells
+    clone_labels = [-i-1 for i in range(n_clones) if np.sum(clone_matrix[:, i]) > 0] # negative so distinct from cells, skipping empty clones
     
     # add nodes for cells
     fitted_tree.add_nodes_from(range(n_cells), time = time, time_to_parent = time)
