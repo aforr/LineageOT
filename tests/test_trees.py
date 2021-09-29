@@ -3,6 +3,7 @@ import pytest
 import lineageot.inference
 import lineageot.simulation
 
+import anndata
 import copy
 import numpy as np
 import networkx as nx
@@ -295,3 +296,71 @@ class Test_Tree_Manipulation():
 
         assert((e1 == e2).all())
         assert((b1 == b2).all())
+
+
+
+
+
+
+class Test_Tree_Fitting():
+    """
+    Collection of tests for tree fitting
+    """
+    def make_minimal_dynamic_adata(self):
+        rng = np.random.default_rng()
+        self.t1 = 5;
+        self.t2 = 10;
+        n_cells_1 = 5;
+        n_cells_2 = 10;
+        n_cells = n_cells_1 + n_cells_2;
+
+        n_genes = 5;
+
+        barcode_length = 10;
+
+        self.dynamic_adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
+                                obs = {"time" : np.concatenate([self.t1*np.ones(n_cells_1), self.t2*np.ones(n_cells_2)])},
+                                obsm = {"barcodes" : rng.integers(low = -1, high = 10, size = (n_cells, barcode_length))}
+                                )
+
+    def make_minimal_static_adata(self):
+        self.t1 = 5
+        self.t2 = 10
+        self.n_cells_1 = 2
+        self.n_cells_2 = 4
+        n_cells = self.n_cells_1 + self.n_cells_2;
+        n_genes = 5
+
+        clones = np.concatenate([np.identity(2), np.kron(np.identity(2), np.ones((2, 1)))])
+        self.static_adata = _adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
+                                obs = {"time" : np.concatenate([self.t1*np.ones(self.n_cells_1), self.t2*np.ones(self.n_cells_2)])},
+                                obsm = {"X_clone" : clones}
+                                )
+
+
+    def test_default_tree_fit(self):
+        self.make_minimal_dynamic_adata()
+        lineage_tree_t2 = lineageot.fit_tree(self.dynamic_adata[self.dynamic_adata.obs['time'] == self.t2], self.t2)
+        # mainly just checking no errors were thrown
+        assert(len(lineage_tree_t2.nodes) == 20)
+
+    def test_unavailable_fitting_method(self):
+        self.make_minimal_dynamic_adata()
+        with pytest.raises(ValueError, match="'fake method' is not an available method for fitting trees"):
+            lineage_tree_t2 = lineageot.fit_tree(self.dynamic_adata[self.dynamic_adata.obs['time'] == self.t2], self.t2, method = "fake method")
+
+    def test_clone_tree_fit(self):
+        self.make_minimal_static_adata()
+        lineage_tree_t2 = lineageot.fit_tree(self.static_adata[self.static_adata.obs['time'] == self.t2], self.t2, method = "non-nested clones")
+
+        correct_tree = nx.DiGraph()
+        correct_tree.add_nodes_from([0, 1, 2, 3], time = 10, time_to_parent = 10)
+        correct_tree.add_nodes_from([-1, -2], time = 0, time_to_parent = 10000)
+        correct_tree.add_node('root', time = -10000)
+
+        correct_tree.add_edges_from([(-1, 0), (-1, 1), (-2, 2), (-2, 3)], time = 10)
+        correct_tree.add_edges_from([('root', -1), ('root', -2)], time = 10000)
+
+        # check isomorphism (ignoring annotation)
+        assert(len(nx.algorithms.isomorphism.rooted_tree_isomorphism(lineage_tree_t2, 'root', correct_tree, 'root')) == 7)
+
