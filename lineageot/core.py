@@ -113,8 +113,6 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
 
 
     # Add inferred ancestor nodes and states
-    inf.add_node_times_from_division_times(lineage_tree_t2)
-
     inf.add_nodes_at_time(lineage_tree_t2, time_1)
 
     observed_nodes = [n for n in inf.get_leaves(lineage_tree_t2, include_root = False)]
