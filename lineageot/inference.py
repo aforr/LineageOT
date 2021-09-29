@@ -257,7 +257,7 @@ def add_times(tree, mutation_rates, time_inference_method, overwrite = False):
         # root should have time zero
         assert(tree.nodes[leaves[-1]]['time'] == 0)
 
-        laplacian = nx.linalg.laplacian_matrix(tree.to_undirected(),
+        laplacian = nx.linalg.laplacian_matrix(nx.Graph(tree),
                                                nodelist = internal_nodes + leaves)
         incidence_matrix = nx.linalg.incidence_matrix(tree,
                                                       nodelist = internal_nodes + leaves,
@@ -675,7 +675,7 @@ def get_lineage_distances_across_time(early_tree, late_tree):
 
     # get length of path up to parent of early_cell and back to early_cell
     for late_cell in cells_late:
-        distance_dictionary, tmp = nx.single_source_dijkstra(late_tree.to_undirected(),
+        distance_dictionary, tmp = nx.single_source_dijkstra(nx.Graph(late_tree),
                                                             late_cell,
                                                             weight = 'time')
         for early_cell in cells_early:
@@ -795,7 +795,7 @@ def add_conditional_means_and_variances(tree, observed_nodes):
     node_list = [n for n in tree.nodes]
     
     add_inverse_times_to_edges(tree)
-    l = nx.laplacian_matrix(tree.to_undirected(), nodelist = node_list, weight = 'inverse time')
+    l = nx.laplacian_matrix(nx.Graph(tree), nodelist = node_list, weight = 'inverse time')
     
     unobserved_nodes = [n for n in node_list if not n in observed_nodes]
     # Resorting so the order of indices in all matrices match
@@ -847,9 +847,53 @@ def get_ancestor_data(tree, time, leaf = None):
 
 
 
+##########################
+# Tree fitting functions #
+##########################
 
+def make_tree_from_nonnested_clones(clone_matrix, time, root_time_factor = 1000):
+    """
+    Creates a forest of stars from clonally-labeled data. The centers of the stars are connected to a root infinitely far in the past.
 
+    Parameters
+    ----------
+    clone_matrix: Boolean array with shape [num_cells, num_clones]
+        Each entry is 1 if the corresponding cell belongs to the corresponding clone and zero otherwise.
+        Each cell should belong to exactly one clone.
+    time: Number
+        The time of sampling of cells relative to initial clonal labelling.
+    root_time_factor: Number, default 1000
+        Relative time to root of tree (i.e., most recent common ancestor of all cells).
+        The time of the root is set to -root_time_factor*time.
+        The default is large so minimal information is shared across clones.
+    Returns
+    -------
+    fitted_tree: Networkx DiGraph
+        A tree annotated with edge and node times
+    """
+    fitted_tree = nx.DiGraph()
 
+    n_cells, n_clones = clone_matrix.shape
+    clone_labels = range(-1, -n_clones - 1, -1) # negative so distinct from cells
+    
+    # add nodes for cells
+    fitted_tree.add_nodes_from(range(n_cells), time = time, time_to_parent = time)
+
+    # add nodes for clone progenitors
+    fitted_tree.add_nodes_from(clone_labels, time = 0, time_to_parent = root_time_factor*time)
+
+    # add edges from clone progenitors to observed cells
+    for clone in clone_labels:
+        cells_in_clone = np.nonzero(clone_matrix[:, -clone - 1])[0]
+        fitted_tree.add_edges_from([(clone, cell, {'time': time}) for cell in cells_in_clone])
+
+    # add root
+    fitted_tree.add_node('root', time = -root_time_factor*time)
+
+    # add edges to root
+    fitted_tree.add_edges_from([('root', i, {'time': root_time_factor*time}) for i in clone_labels])
+
+    return fitted_tree
 
 
 
