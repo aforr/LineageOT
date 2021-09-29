@@ -6,7 +6,7 @@
 Welcome to LineageOT's documentation!
 =====================================
 
-LineageOT is a package for analyzing lineage-traced single-cell sequencing time series. For full details, see our `paper <https://www.biorxiv.org/content/10.1101/2020.07.31.231621v2>`_.
+LineageOT is a package for analyzing lineage-traced single-cell sequencing time series. For full details, see our `paper <https://www.nature.com/articles/s41467-021-25133-1>`_.
 
 All of the functionality required for running LineageOT is in the ``core`` module. The remaining modules have implementation functions and code for reproducing analyses in the paper.
 

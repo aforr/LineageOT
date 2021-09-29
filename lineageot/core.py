@@ -7,7 +7,7 @@ import ot
 import lineageot.inference as inf
 
 
-def fit_tree(adata, time, barcodes_key = 'barcodes', method = 'neighbor join'):
+def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", method = 'neighbor join'):
     """
     Fits a lineage tree to lineage barcodes of all cells in adata. To compute the lineage tree for a specific time point,
     filter adata before calling fit_tree. The fitted tree is annotated with node times but not states.
@@ -17,13 +17,18 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', method = 'neighbor join'):
     adata : AnnData
         Annotated data matrix with lineage-traced cells
     time : Number
-        Time of sampling of the cells of adata
+        Time of sampling of the cells of adata relative to most recent common ancestor (for dynamic lineage tracing) or labeling time (for static lineage tracing).
     barcodes_key : str, default 'barcodes'
-        Key in adata.obsm containing cell barcodes.
-        Each row of adata.obsm[barcodes_key] should be a barcode where each entry corresponds to a possibly-mutated site.
+        Key in adata.obsm containing cell barcodes. Ignored if using clonal data.
+        If using barcode data, each row of adata.obsm[barcodes_key] should be a barcode where each entry corresponds to a possibly-mutated site.
         A positive number indicates an observed mutation, zero indicates no mutation, and -1 indicates the site was not observed.
+    clones_key: str, default 'X_clone'
+        Key in adata.obsm containing clonal data. Ignored if using barcodes directly.
+        If using clonal data, adata.obsm[clones_key] should be a num_cells x num_clones boolean matrix.
+        Each entry is 1 if the corresponding cell belongs to the corresponding clone and zero otherwise.
     method : str
-        Inference method used to fit tree to barcodes. Currently 'neighbor join' is the only option.
+        Inference method used to fit tree.
+        Current options are 'neighbor join' (for barcodes from dynamic lineage tracing) or 'non-nested clones' (for non-nested clones from static lineage tracing).
 
     Returns
     -------
@@ -31,24 +36,33 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', method = 'neighbor join'):
         A fitted lineage tree
     """
 
-    # compute distances
-    barcode_length = adata.obsm[barcodes_key].shape[1]
-    # last row is (unobserved) root of the tree
-    lineage_distances = inf.barcode_distances(np.concatenate([adata.obsm[barcodes_key], np.zeros([1,barcode_length])]))
+    if method == "neighbor join":
+        # compute distances
+        barcode_length = adata.obsm[barcodes_key].shape[1]
+        # last row is (unobserved) root of the tree
+        lineage_distances = inf.barcode_distances(np.concatenate([adata.obsm[barcodes_key], np.zeros([1,barcode_length])]))
+        
+        # compute tree
+        fitted_tree = inf.neighbor_join(lineage_distances)
+        
+        # annotate tree with node times
+        inf.add_leaf_barcodes(fitted_tree, adata.obsm[barcodes_key])
+        inf.add_leaf_times(fitted_tree, time)
+        
+        # Estimating a uniform mutation rate for all target sites
+        rate_estimate = inf.rate_estimator(adata.obsm[barcodes_key], time)
+        inf.annotate_tree(fitted_tree, 
+                          rate_estimate*np.ones(barcode_length),
+                          time_inference_method = 'least_squares');
+    elif method == "non-nested clones":
+        # check to confirm clones are not nested
+        if not np.all(np.sum(adata.obsm[clones_key], 1) == 1):
+            raise ValueError("The tree fitting method 'non-nested clones' assumes each cell is a member of exactly one clone. This is not the case for your data.")
 
-    # compute tree
-    fitted_tree = inf.neighbor_join(lineage_distances)
+        fitted_tree = inf.make_tree_from_nonnested_clones(adata.obsm[clones_key], time)
 
-    # annotate tree with node times
-    inf.add_leaf_barcodes(fitted_tree, adata.obsm[barcodes_key])
-    inf.add_leaf_times(fitted_tree, time)
-
-    # Estimating a uniform mutation rate for all target sites
-    rate_estimate = inf.rate_estimator(adata.obsm[barcodes_key], time)
-    inf.annotate_tree(fitted_tree, 
-                      rate_estimate*np.ones(barcode_length),
-                      time_inference_method = 'least_squares');
-
+    else:
+        raise ValueError("'" + method + "' is not an available method for fitting trees.")
 
     return fitted_tree
 
@@ -99,8 +113,6 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
 
 
     # Add inferred ancestor nodes and states
-    inf.add_node_times_from_division_times(lineage_tree_t2)
-
     inf.add_nodes_at_time(lineage_tree_t2, time_1)
 
     observed_nodes = [n for n in inf.get_leaves(lineage_tree_t2, include_root = False)]
