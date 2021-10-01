@@ -33,7 +33,10 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", met
     Returns
     -------
     tree : Networkx DiGraph
-        A fitted lineage tree
+        A fitted lineage tree. 
+        Each node is annotated with 'time' (which indicates either the time of sampling (for observed cells) or the time of division (for unobserved ancestors). 
+        Edges are directed from parent to child and are annotated with 'time' equal to the child node's 'time_to_parent'.
+        Observed node indices correspond to their row in adata.
     """
 
     if method == "neighbor join":
