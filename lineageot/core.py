@@ -68,7 +68,7 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", met
 
 
 
-def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'time', state_key = None, epsilon = 0.05, normalize_cost = True):
+def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'time', state_key = None, epsilon = 0.05, normalize_cost = True, ot_method = 'sinkhorn'):
     """
     Fits a LineageOT coupling between the cells in adata at time_1 and time_2. 
     In the process, annotates the lineage tree with observed and estimated cell states.
@@ -92,7 +92,11 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
     normalize_cost : bool (default True)
         Whether to rescale the cost matrix by its median before fitting a coupling. 
         Normalizing this way allows us to choose a reasonable default epsilon for data of any scale
-
+    ot_method : str (default 'sinkhorn')
+        Method used for the optimal transport solver. 
+        Either 'sinkhorn', 'greenkhorn', 'sinkhorn_stabilized' or 'sinkhorn_epsilon_scaling'.
+        'sinkhorn' is recommended unless you encounter numerical problems.
+        See PythonOT docs for more details.
     Returns
     -------
     coupling : AnnData
@@ -128,7 +132,7 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
         lineageOT_cost = lineageOT_cost/np.median(lineageOT_cost)
 
     # fit coupling
-    coupling_matrix = ot.sinkhorn([], [], lineageOT_cost, epsilon)
+    coupling_matrix = ot.sinkhorn([], [], lineageOT_cost, epsilon, method = ot_method)
 
 
     # reformat coupling as anndata
