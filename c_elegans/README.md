@@ -1,9 +1,10 @@
 # Running LineageOT on C elegans dataset
 
-This folder contains scripts for reproducing the analysis of C. elegans data in the [LineageOT paper](https://www.nature.com/articles/s41467-021-25133-1).
+This folder contains scripts for reproducing parts of the analysis of _C. elegans_ data in the [LineageOT paper](https://www.nature.com/articles/s41467-021-25133-1).
 
-Our goal with these scripts is reproducibility, not usability for future analyses. We do not plan to make additions beyond what is necessary to recreate the published figures. Errors discovered may be noted but not corrected.
+Our priority with these scripts is reproducibility rather than usability for future analyses. It is a record of what we did, not necessarily what you should do. The code is messy in places. If you would like to do something more complicated than creating identical figures to ours, and you are struggling with the code, please get in touch.
 
+All figures were created on Ubuntu. Adaptations may need to be made for other operating systems.
 
 ## Acquiring data
 
@@ -19,3 +20,7 @@ Run the preprocessing scripts in this order:
 1. Run ```make_reference_tree.py``` to create the reference lineage tree.
 2. Run ```add_random_precise_lineage.py``` to do random imputation of lineage labels.
 3. Run ```filter_cells.py``` to filter out cells with no lineage annotation.
+
+## Creating figures
+
+Currently, this folder has one figure creation script, ```make_figure_2bcd.ipynb```. Running the entire notebook should create Figure 2b, Figure 2c, Figure 2d, and Figure S5a in the folder ```c_elegans/plots/```.
