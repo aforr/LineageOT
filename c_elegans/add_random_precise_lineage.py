@@ -18,7 +18,7 @@ edited_cell_annotation_file = "GSE126954_cell_annotation_with_random_lineage_" +
 cell_annotations = pd.read_csv(data_path+cell_annotation_file)
 cell_annotations.index = [str(i) for i in cell_annotations.index]
 
-with open("../packer_pickle_lineage_tree.p", 'rb') as file:
+with open(data_path + "packer_pickle_lineage_tree.p", 'rb') as file:
     full_reference_tree = pickle.load(file)
 
 paper_table_s6 = pd.read_csv(data_path + supplement_s6_file)

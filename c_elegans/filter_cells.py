@@ -32,5 +32,5 @@ adata_filtered = adata[cells_to_keep_mask].copy()
 
 
 
-with open('pickled_filtered_anndata.p', 'wb') as file:
+with open(data_path + 'pickled_filtered_anndata.p', 'wb') as file:
     pickle.dump(adata_filtered, file)
