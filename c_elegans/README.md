@@ -1,4 +1,4 @@
-# Running LineageOT on C elegans dataset
+# Running LineageOT on _C. elegans_ dataset
 
 This folder contains scripts for reproducing parts of the analysis of _C. elegans_ data in the [LineageOT paper](https://www.nature.com/articles/s41467-021-25133-1).
 
@@ -23,4 +23,7 @@ Run the preprocessing scripts in this order:
 
 ## Creating figures
 
-Currently, this folder has one figure creation script, ```make_figure_2bcd.ipynb```. Running the entire notebook should create Figure 2b, Figure 2c, Figure 2d, and Figure S5a in the folder ```c_elegans/plots/```.
+There are currently two figure creation scripts.
+
+1. ```make_figure_3b-g.ipynb```. Running the entire notebook should create all of the parts of Figure 3 except Figure 3a, as well as Figure S5a, in the folder ```c_elegans/plots/```.
+2. ```make_figure_3a.ipynb```. Running the entire notebook should create Figure 3a, Figure S3a, and Figure S4a, in the folder ```c_elegans/plots/```. This script does not run directly on the data; instead, errors with optimal regularization choices for each of the sampling strategies were computed with scripts very similar to ```make_figure_3b-g.ipynb``` and copied directly into the notebook.
