@@ -853,7 +853,7 @@ def get_ancestor_data(tree, time, leaf = None):
 
 def make_tree_from_nonnested_clones(clone_matrix, time, root_time_factor = 1000):
     """
-    Creates a forest of stars from clonally-labeled data. The centers of the stars are connected to a root infinitely far in the past.
+    Creates a forest of stars from clonally-labeled data. The centers of the stars are connected to a root far in the past.
 
     Parameters
     ----------
@@ -868,7 +868,7 @@ def make_tree_from_nonnested_clones(clone_matrix, time, root_time_factor = 1000)
         The default is large so minimal information is shared across clones.
     Returns
     -------
-    fitted_tree: Networkx DiGraph
+    fitted_tree: NetworkX DiGraph
         A tree annotated with edge and node times
     """
     fitted_tree = nx.DiGraph()
@@ -896,7 +896,85 @@ def make_tree_from_nonnested_clones(clone_matrix, time, root_time_factor = 1000)
     return fitted_tree
 
 
+def make_clone_reference_tree(clone_matrix, clone_times, root_time = None):
+    """
+    Makes a tree with nodes for
+    
+    Parameters
+    ----------
+    clone_matrix: Boolean array with shape [num_cells, num_clones]
+        Each entry is 1 if the corresponding cell belongs to the corresponding clone and zero otherwise.
+    clone_times: Vector of length num_clones
+        Each entry has the time of labeling of the corresponding clone.
+    root_time: Number, default None
+        The time of the most recent common ancestor of all clones. 
+        If None, automatically set to a time far in the past 
 
+    Returns
+    -------
+    clone_reference_tree: NetworkX DiGraph
+        A tree of clones (not sampled cells), annotated with edge and node times
+    """
+    if root_time == None:
+        root_time = np.min(clone_times) - 1000*(np.maximum(1, np.max(clone_times) - np.min(clone_times)))
+
+    n_cells, n_clones = clone_matrix.shape
+    unique_times = np.unique(clone_times) # output is sorted
+    clone_labels = ['clone_' + str(i) for i in range(n_clones)]
+
+    # make base level of tree
+    clone_reference_tree = nx.DiGraph()
+    clone_reference_tree.add_node('root', time = root_time)
+
+    current_clone_indices = np.nonzero(clone_times == unique_times[0])[0]
+    current_clone_labels = [clone_labels[i] for i in current_clone_indices]
+    clone_reference_tree.add_nodes_from(current_clone_labels, time = unique_times[0], time_to_parent = unique_times[0] - root_time)
+    clone_reference_tree.add_edges_from([('root', label, {'time': unique_times[0] - root_time}) for label in current_clone_labels])
+
+
+    # make subsequent levels
+    for level, labeling_time in zip(range(1, len(unique_times)), unique_times[1:]):
+        current_clone_indices = np.nonzero(clone_times == labeling_time)[0]
+        current_clone_labels = [clone_labels[i] for i in current_clone_indices]
+        time_to_parents = labeling_time - unique_times[level-1]
+
+        clone_reference_tree.add_nodes_from(current_clone_labels, time = labeling_time, time_to_parent = time_to_parents)
+
+        for clone_index in current_clone_indices:
+            parent_index = find_parent_clone(clone_index, clone_matrix, clone_times)
+            clone_reference_tree.add_edge(clone_labels[parent_index], clone_labels[clone_index], time = time_to_parents)
+
+    return clone_reference_tree
+
+
+def find_parent_clone(clone, clone_matrix, clone_times):
+    """
+    Returns the parent of a subclone, assuming this is uniquely defined as the clone from
+    an earlier time point whose barcode was observed in a cell from the subclone.
+
+    Parameters
+    ----------
+    clone: int
+        Index of clone whose parent will be returned
+    clone_matrix: Boolean array with shape [num_cells, num_clones]
+        Each entry is 1 if the corresponding cell belongs to the corresponding clone and zero otherwise.
+    clone_times: Vector of length num_clones
+        Each entry has the time of labeling of the corresponding clone.
+
+    Returns
+    -------
+    parent: int
+       Index of parent clone.
+    """
+    clone_is_earlier = clone_times < clone_times[clone]
+    clone_is_shared = np.sum(clone_matrix[clone_matrix[:, clone] == 1, :], 0) > 0
+
+    candidates = np.nonzero(clone_is_earlier & clone_is_shared)[0]
+
+    if len(candidates) == 1:
+        return candidates[0]
+    else:
+        raise ValueError("The input clone matrix does not unambiguously define a clonal lineage tree. Please use another method to create the tree.")
 
 
 ###################################
