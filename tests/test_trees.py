@@ -330,9 +330,30 @@ class Test_Tree_Fitting():
         self.n_cells_2 = 4
         n_cells = self.n_cells_1 + self.n_cells_2;
         n_genes = 5
-
+        self.clone_times = np.array([0,0])
+        
         clones = np.concatenate([np.identity(2), np.kron(np.identity(2), np.ones((2, 1)))])
         self.static_adata = _adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
+                                obs = {"time" : np.concatenate([self.t1*np.ones(self.n_cells_1), self.t2*np.ones(self.n_cells_2)])},
+                                obsm = {"X_clone" : clones}
+                                )
+
+    def make_nested_static_adata(self):
+        self.t1 = 5
+        self.t2 = 10
+        self.n_cells_1 = 2
+        self.n_cells_2 = 8
+        n_cells = self.n_cells_1 + self.n_cells_2;
+        n_genes = 5
+        self.clone_times = np.array([0, 0, 7, 7, 7, 7])
+
+        day_0_clones = np.concatenate([np.identity(2), np.kron(np.identity(2), np.ones((4, 1)))])
+        day_7_clones = np.concatenate([np.zeros((2,4)), np.kron(np.identity(4), np.ones((2, 1)))])
+
+        clones = np.concatenate([day_0_clones, day_7_clones], 1)
+
+
+        self.static_adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
                                 obs = {"time" : np.concatenate([self.t1*np.ones(self.n_cells_1), self.t2*np.ones(self.n_cells_2)])},
                                 obsm = {"X_clone" : clones}
                                 )
