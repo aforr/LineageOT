@@ -950,7 +950,7 @@ def add_samples_to_clone_tree(clone_matrix, clone_times, clone_reference_tree, s
     for cell in range(n_cells):
         parent_index = get_parent_clone_of_leaf(cell, clone_matrix, clone_times)
         parent_label = 'clone_' + str(parent_index)
-        edge_time = sampling_time = clone_reference_tree.nodes[parent_label]['time']
+        edge_time = sampling_time - clone_reference_tree.nodes[parent_label]['time']
         clone_reference_tree.add_node(cell, time = sampling_time, time_to_parent = edge_time)
         clone_reference_tree.add_edge(parent_label, cell, time = edge_time)
     return
