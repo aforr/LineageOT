@@ -7,7 +7,7 @@ import ot
 import lineageot.inference as inf
 
 
-def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", method = 'neighbor join'):
+def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", clone_times = None, method = 'neighbor join'):
     """
     Fits a lineage tree to lineage barcodes of all cells in adata. To compute the lineage tree for a specific time point,
     filter adata before calling fit_tree. The fitted tree is annotated with node times but not states.
@@ -26,9 +26,12 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", met
         Key in adata.obsm containing clonal data. Ignored if using barcodes directly.
         If using clonal data, adata.obsm[clones_key] should be a num_cells x num_clones boolean matrix.
         Each entry is 1 if the corresponding cell belongs to the corresponding clone and zero otherwise.
+    clone_times: Vector of length num_clones, default None
+        Ignored unless method is 'clones'.
+        Each entry contains the time of labeling of the corresponding column of adata.obsm[clones_key].
     method : str
         Inference method used to fit tree.
-        Current options are 'neighbor join' (for barcodes from dynamic lineage tracing) or 'non-nested clones' (for non-nested clones from static lineage tracing).
+        Current options are 'neighbor join' (for barcodes from dynamic lineage tracing), 'non-nested clones' (for non-nested clones from static lineage tracing), or 'clones' (for possibly-nested clones from static lineage tracing).
 
     Returns
     -------
@@ -64,6 +67,11 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", met
 
         fitted_tree = inf.make_tree_from_nonnested_clones(adata.obsm[clones_key], time)
 
+    elif method == "clones":
+        if clone_times is None:
+            raise ValueError("clone_times must be specified in order to fit a tree to nested clones.")
+
+        fitted_tree = inf.make_tree_from_clones(adata.obsm[clones_key], time, clone_times)
     else:
         raise ValueError("'" + method + "' is not an available method for fitting trees.")
 
