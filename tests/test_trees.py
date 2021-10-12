@@ -337,6 +337,27 @@ class Test_Tree_Fitting():
                                 obsm = {"X_clone" : clones}
                                 )
 
+    def assert_tree_equality(self, tree_1, tree_2):
+        num_nodes = len(tree_1.nodes)
+        # check isomorphism (ignoring annotation)
+        assert(len(nx.algorithms.isomorphism.rooted_tree_isomorphism(tree_1, 'root', tree_2, 'root')) == num_nodes)
+        # check node sets match
+        for node in tree_1.nodes:
+            assert(node in tree_2.nodes)
+        # check node annotations match
+        for node in tree_1.nodes:
+            for key in tree_1.nodes[node]:
+                print("Node: ", node)
+                print("Key: ", key)
+                print(tree_2.nodes[node])
+                assert(tree_1.nodes[node][key] == tree_2.nodes[node][key])
+        # check edge annotations match
+        for edge in tree_1.edges:
+            for key in tree_1.edges[edge]:
+                print("Edge: ", edge)
+                print("Key: ", key)
+                assert(tree_1.edges[edge][key] == tree_2.edges[edge][key])
+        
 
     def test_default_tree_fit(self):
         self.make_minimal_dynamic_adata()
@@ -361,6 +382,42 @@ class Test_Tree_Fitting():
         correct_tree.add_edges_from([(-1, 0), (-1, 1), (-2, 2), (-2, 3)], time = 10)
         correct_tree.add_edges_from([('root', -1), ('root', -2)], time = 10000)
 
-        # check isomorphism (ignoring annotation)
-        assert(len(nx.algorithms.isomorphism.rooted_tree_isomorphism(lineage_tree_t2, 'root', correct_tree, 'root')) == 7)
+        self.assert_tree_equality(correct_tree, lineage_tree_t2)
 
+    def test_nested_clone_needing_parameters(self):
+        self.make_minimal_static_adata()
+        with pytest.raises(ValueError, match = "clone_times must be specified"):
+            lineage_tree_t2 = lineageot.fit_tree(self.static_adata[self.static_adata.obs['time'] == self.t2], self.t2, method = "clones")
+
+
+    def test_nested_clone_tree_fit_1(self):
+        # testing on nonnested clones
+        self.make_minimal_static_adata()
+        lineage_tree_t2 = lineageot.fit_tree(self.static_adata[self.static_adata.obs['time'] == self.t2], self.t2, clone_times = self.clone_times, method = "clones")
+
+        correct_tree = nx.DiGraph()
+        correct_tree.add_nodes_from([0, 1, 2, 3], time = 10, time_to_parent = 10)
+        correct_tree.add_nodes_from(['clone_0', 'clone_1'], time = 0, time_to_parent = 1000)
+        correct_tree.add_node('root', time = -1000)
+
+        correct_tree.add_edges_from([('clone_0', 0), ('clone_0', 1), ('clone_1', 2), ('clone_1', 3)], time = 10)
+        correct_tree.add_edges_from([('root', 'clone_0'), ('root', 'clone_1')], time = 1000)
+
+        self.assert_tree_equality(correct_tree, lineage_tree_t2)
+
+
+    def test_nested_clone_tree_fit_2(self):
+        # testing on simply nested clones
+        self.make_nested_static_adata()
+        lineage_tree_t2 = lineageot.fit_tree(self.static_adata[self.static_adata.obs['time'] == self.t2], self.t2, clone_times = self.clone_times, method = "clones")
+
+        correct_tree = nx.DiGraph()
+        correct_tree.add_nodes_from([0, 1, 2, 3, 4, 5, 6, 7], time = 10, time_to_parent = 3)
+        correct_tree.add_nodes_from(['clone_0', 'clone_1'], time = 0, time_to_parent = 7000) # day 0 clones
+        correct_tree.add_nodes_from(['clone_2', 'clone_3', 'clone_4', 'clone_5'], time = 7, time_to_parent = 7) # day 7 clones
+        correct_tree.add_node('root', time = -7000)
+
+        correct_tree.add_edges_from([('clone_0', 'clone_2'), ('clone_0', 'clone_3'), ('clone_1', 'clone_4'), ('clone_1', 'clone_5')], time = 7)
+        correct_tree.add_edges_from([('clone_2', 0), ('clone_2', 1), ('clone_3', 2), ('clone_3', 3), ('clone_4', 4), ('clone_4', 5), ('clone_5', 6), ('clone_5', 7)], time = 3)
+        correct_tree.add_edges_from([('root', 'clone_0'), ('root', 'clone_1')], time = 7000)
+        self.assert_tree_equality(correct_tree, lineage_tree_t2)
