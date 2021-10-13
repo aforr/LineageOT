@@ -3,7 +3,7 @@
 LineageOT with static lineage tracing
 =====================================
 """
-
+###############################################################################
 # While designed for dynamic lineage tracing with continuously edited barcodes,
 # LineageOT can be applied to any time course where a lineage tree can be created,
 # including static barcoding data. 
