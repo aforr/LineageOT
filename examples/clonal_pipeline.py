@@ -26,7 +26,7 @@ rng = np.random.default_rng()
 # First we make a minimal fake AnnData object to run LineageOT on. Here, the lineage
 # information is encoded in a Boolean matrix with cells as rows and clones as column,
 # where entry ``[i, j]`` is 1 if and only if cell ``i`` belongs to clone ``j``.
-# This example has two disjoint clones
+# This example has two initial clones labeled at time 0 and four subclones labeled at time 7.
 #
 # In addition to the clone identities, LineageOT also needs a time for each clone. This is encoded in the vector ``clone_times``, whose entries give the time of labeling of the clones.
 
@@ -46,7 +46,6 @@ time_0_clones = np.concatenate([np.kron(np.identity(2), np.ones((2,1))),
 time_7_clones = np.concatenate([np.zeros((4,4)),
                                 np.kron(np.identity(4), np.ones((2,1)))])
 clones = np.concatenate([time_0_clones, time_7_clones], 1)
-print(clones)
 
 clone_times = np.array([0, 0, 7, 7, 7, 7]) 
 
@@ -54,6 +53,8 @@ adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
                         obs = {"time" : np.concatenate([t1*np.ones(n_cells_1), t2*np.ones(n_cells_2)])},
                         obsm = {"X_clone" : clones}
                        )
+
+print(clones)
 
 ###############################################################################
 # Fitting a lineage tree
