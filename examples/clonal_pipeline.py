@@ -34,15 +34,22 @@ t1 = 5;
 t2 = 10;
 
 n_cells_1 = 4;
-n_cells_2 = 10;
+n_cells_2 = 8;
 n_cells = n_cells_1 + n_cells_2;
 
 n_genes = 5;
 
-
-clones = np.concatenate([np.kron(np.identity(2),np.ones((2,1))), np.kron(np.identity(2), np.ones((5,1)))])
+# clones labeled at time 0
+time_0_clones = np.concatenate([np.kron(np.identity(2), np.ones((2,1))),
+                                np.kron(np.identity(2), np.ones((4,1)))])
+# clones labeled at time 7
+time_7_clones = np.concatenate([np.zeros((4,4)),
+                                np.kron(np.identity(4), np.ones((2,1)))])
+clones = np.concatenate([time_0_clones, time_7_clones], 1)
 print(clones)
-clone_times = np.array([0, 0]) # both clones labeled at time 0
+
+clone_times = np.array([0, 0, 7, 7, 7, 7]) 
+
 adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
                         obs = {"time" : np.concatenate([t1*np.ones(n_cells_1), t2*np.ones(n_cells_2)])},
                         obsm = {"X_clone" : clones}
@@ -53,7 +60,7 @@ adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
 # ----------------------
 #
 # Before running LineageOT, we need to build a lineage tree from the observed barcodes.
-# For clonal data where the clones are not nested, we provide an algorithm to construct a set of stars.
+# For static lineage tracing data, we provide an algorithm to construct a tree of possibly-nested clones, assuming there are no barcode collisions across clones so the phylogeny is straightforward to reconstruct.
 # This step is not optimized. 
 # Feel free to use your own preferred tree construction algorithm.
 #
