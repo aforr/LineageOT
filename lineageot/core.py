@@ -67,7 +67,7 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", clo
     elif method == "clones":
         if clone_times is None:
             raise ValueError("clone_times must be specified in order to fit a tree to nested clones.")
-
+        clone_times = np.array(clone_times) # allowing clone_times to be passed as a raw list without causing errors later
         fitted_tree = inf.make_tree_from_clones(adata.obsm[clones_key], time, clone_times)
     else:
         raise ValueError("'" + method + "' is not an available method for fitting trees.")
