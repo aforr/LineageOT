@@ -27,6 +27,8 @@ rng = np.random.default_rng()
 # information is encoded in a Boolean matrix with cells as rows and clones as column,
 # where entry ``[i, j]`` is 1 if and only if cell ``i`` belongs to clone ``j``.
 # This example has two disjoint clones
+#
+# In addition to the clone identities, LineageOT also needs a time for each clone. This is encoded in the vector ``clone_times``, whose entries give the time of labeling of the clones.
 
 t1 = 5;
 t2 = 10;
@@ -40,7 +42,7 @@ n_genes = 5;
 
 clones = np.concatenate([np.kron(np.identity(2),np.ones((2,1))), np.kron(np.identity(2), np.ones((5,1)))])
 print(clones)
-
+clone_times = np.array([0, 0]) # both clones labeled at time 0
 adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
                         obs = {"time" : np.concatenate([t1*np.ones(n_cells_1), t2*np.ones(n_cells_2)])},
                         obsm = {"X_clone" : clones}
@@ -60,7 +62,7 @@ adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
 # Edges are directed from parent to child and are annotated with ``'time'`` equal to the child node's ``'time_to_parent'``.
 # Observed node indices correspond to their row in ``adata[adata.obs['time'] == t2]``. 
 
-lineage_tree_t2 = lineageot.fit_tree(adata[adata.obs['time'] == t2], t2, method = 'non-nested clones')
+lineage_tree_t2 = lineageot.fit_tree(adata[adata.obs['time'] == t2], t2, clone_times = clone_times, method = 'clones')
 
 
 ###############################################################################
