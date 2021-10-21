@@ -14,7 +14,7 @@ rng = np.random.default_rng()
 # Creating data
 # -------------
 #
-# Here we make a minimal fake AnnData object to run LineageOT on.
+# First we make a minimal fake AnnData object to run LineageOT on.
 
 
 t1 = 5;
@@ -34,14 +34,33 @@ adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
                        )
 
 ###############################################################################
-# Running LineageOT
-# -----------------
+# Fitting a lineage tree
+# ----------------------
+#
+# Before running LineageOT, we need to build a lineage tree from the observed barcodes.
+# This step is not optimized. We provide an implementation of a heuristic algorithm called neighbor joining.
+# Feel free to use your own preferred tree construction algorithm.
+#
+# The tree should be formatted as a NetworkX ``DiGraph`` in the same way as the output of ``lineageot.fit_tree()``
+# Each node is annotated with ``'time'`` (which indicates either the time of sampling (for observed cells) or the time of division (for unobserved ancestors).
+# Edges are directed from parent to child and are annotated with ``'time'`` equal to the child node's ``'time_to_parent'``.
+# Observed node indices correspond to their row in ``adata[adata.obs['time'] == t2]``. 
 
 lineage_tree_t2 = lineageot.fit_tree(adata[adata.obs['time'] == t2], t2)
+
+
+###############################################################################
+# Running LineageOT
+# -----------------
+#
+# Once we have a lineage tree annotated with time, we can compute a LineageOT coupling.
 coupling = lineageot.fit_lineage_coupling(adata, t1, t2, lineage_tree_t2)
 
 ###############################################################################
 # Saving 
 # ------
-# This saves the fitted coupling in a format Waddington-OT can import
+# The LineageOT package does not include functionality for downstream analysis and plotting.
+# We recommend transitioning to other packages, like `Waddington-OT <https://broadinstitute.github.io/wot/>`_, after computing a coupling.
+# This saves the fitted coupling in a format Waddington-OT can import.
+
 lineageot.save_coupling_as_tmap(coupling, t1, t2, './tmaps/example')

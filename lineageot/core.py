@@ -1,5 +1,6 @@
 
 import anndata
+import newick
 import numpy as np
 import os
 import ot
@@ -36,7 +37,10 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", clo
     Returns
     -------
     tree : Networkx DiGraph
-        A fitted lineage tree
+        A fitted lineage tree. 
+        Each node is annotated with 'time_to_parent' and 'time' (which indicates either the time of sampling (for observed cells) or the time of division (for unobserved ancestors)). 
+        Edges are directed from parent to child and are annotated with 'time' equal to the child node's 'time_to_parent'.
+        Observed node indices correspond to their row in adata.
     """
 
     if method == "neighbor join":
@@ -67,12 +71,37 @@ def fit_tree(adata, time, barcodes_key = 'barcodes', clones_key = "X_clone", clo
     elif method == "clones":
         if clone_times is None:
             raise ValueError("clone_times must be specified in order to fit a tree to nested clones.")
-
+        clone_times = np.array(clone_times) # allowing clone_times to be passed as a raw list without causing errors later
         fitted_tree = inf.make_tree_from_clones(adata.obsm[clones_key], time, clone_times)
     else:
         raise ValueError("'" + method + "' is not an available method for fitting trees.")
 
     return fitted_tree
+
+
+def read_newick(filename, leaf_labels, leaf_time = None):
+    """
+    Loads a tree saved in Newick format and adds annotations required for LineageOT.
+    
+    Parameters
+    ----------
+    filename : str
+        The name of the file to load from.
+    leaf_labels : list
+        The label of each leaf in the Newick tree, sorted to align with the gene expression AnnData object filtered to cells at the corresponding time.
+    leaf_time : float (default None)
+        The time of sampling of the leaves. If unspecified, the root of the tree is assigned time 0.
+    Returns
+    -------
+    tree : Networkx DiGraph
+        The saved tree, in LineageOT's format.
+        Each node is annotated with 'time_to_parent' and 'time' (which indicates either the time of sampling (for observed cells) or the time of division (for unobserved ancestors)). 
+        Edges are directed from parent to child and are annotated with 'time' equal to the child node's 'time_to_parent'.
+        Observed node indices correspond to their index in leaf_labels, which should match their row in the gene expression AnnData object filtered to cells at the corresponding time.
+    """
+    newick_tree = newick.read(filename)[0]
+    tree = inf.convert_newick_to_networkx(newick_tree, leaf_labels, leaf_time)
+    return tree
 
 
 
