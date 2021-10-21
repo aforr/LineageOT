@@ -7,6 +7,37 @@ import anndata
 import copy
 import numpy as np
 import networkx as nx
+import newick
+
+
+
+
+def assert_tree_equality(tree_1, tree_2):
+    num_nodes = len(tree_1.nodes)
+    # check isomorphism (ignoring annotation)
+    assert(len(nx.algorithms.isomorphism.rooted_tree_isomorphism(tree_1, 'root', tree_2, 'root')) == num_nodes)
+    # check node sets match
+    for node in tree_1.nodes:
+        assert(node in tree_2.nodes)
+    # check node annotations match
+    for node in tree_1.nodes:
+        for key in tree_1.nodes[node]:
+            print("Node: ", node)
+            print("Key: ", key)
+            print(tree_2.nodes[node])
+            if type(tree_1.nodes[node][key]) == float:
+                assert(np.isclose(tree_1.nodes[node][key], tree_2.nodes[node][key], atol = 0))
+            else:
+                assert(tree_1.nodes[node][key] == tree_2.nodes[node][key])
+    # check edge annotations match
+    for edge in tree_1.edges:
+        for key in tree_1.edges[edge]:
+            print("Edge: ", edge)
+            print("Key: ", key)
+            if type(tree_1.edges[edge][key]) == float:
+                assert(np.isclose(tree_1.edges[edge][key], tree_2.edges[edge][key], atol = 0))
+            else:
+                assert(tree_1.edges[edge][key] == tree_2.edges[edge][key])
 
 
 
@@ -358,26 +389,6 @@ class Test_Tree_Fitting():
                                 obsm = {"X_clone" : clones}
                                 )
 
-    def assert_tree_equality(self, tree_1, tree_2):
-        num_nodes = len(tree_1.nodes)
-        # check isomorphism (ignoring annotation)
-        assert(len(nx.algorithms.isomorphism.rooted_tree_isomorphism(tree_1, 'root', tree_2, 'root')) == num_nodes)
-        # check node sets match
-        for node in tree_1.nodes:
-            assert(node in tree_2.nodes)
-        # check node annotations match
-        for node in tree_1.nodes:
-            for key in tree_1.nodes[node]:
-                print("Node: ", node)
-                print("Key: ", key)
-                print(tree_2.nodes[node])
-                assert(tree_1.nodes[node][key] == tree_2.nodes[node][key])
-        # check edge annotations match
-        for edge in tree_1.edges:
-            for key in tree_1.edges[edge]:
-                print("Edge: ", edge)
-                print("Key: ", key)
-                assert(tree_1.edges[edge][key] == tree_2.edges[edge][key])
         
 
     def test_default_tree_fit(self):
@@ -403,7 +414,7 @@ class Test_Tree_Fitting():
         correct_tree.add_edges_from([(-1, 0), (-1, 1), (-2, 2), (-2, 3)], time = 10)
         correct_tree.add_edges_from([('root', -1), ('root', -2)], time = 10000)
 
-        self.assert_tree_equality(correct_tree, lineage_tree_t2)
+        assert_tree_equality(correct_tree, lineage_tree_t2)
 
     def test_nested_clone_needing_parameters(self):
         self.make_minimal_static_adata()
@@ -424,7 +435,7 @@ class Test_Tree_Fitting():
         correct_tree.add_edges_from([('clone_0', 0), ('clone_0', 1), ('clone_1', 2), ('clone_1', 3)], time = 10)
         correct_tree.add_edges_from([('root', 'clone_0'), ('root', 'clone_1')], time = 1000)
 
-        self.assert_tree_equality(correct_tree, lineage_tree_t2)
+        assert_tree_equality(correct_tree, lineage_tree_t2)
 
 
     def test_nested_clone_tree_fit_2(self):
@@ -441,4 +452,41 @@ class Test_Tree_Fitting():
         correct_tree.add_edges_from([('clone_0', 'clone_2'), ('clone_0', 'clone_3'), ('clone_1', 'clone_4'), ('clone_1', 'clone_5')], time = 7)
         correct_tree.add_edges_from([('clone_2', 0), ('clone_2', 1), ('clone_3', 2), ('clone_3', 3), ('clone_4', 4), ('clone_4', 5), ('clone_5', 6), ('clone_5', 7)], time = 3)
         correct_tree.add_edges_from([('root', 'clone_0'), ('root', 'clone_1')], time = 7000)
-        self.assert_tree_equality(correct_tree, lineage_tree_t2)
+        assert_tree_equality(correct_tree, lineage_tree_t2)
+
+
+
+
+class Test_Tree_Loading():
+    """
+    Tests for importing and annotating trees created elsewhere
+    """
+
+    def test_convert_newick(self):
+        
+        newick_tree = newick.loads('(((One:0.2,Two:0.3):0.3,(Three:0.5,Four:0.3):0.2):0.3,Five:0.7):0.0;')[0]
+        leaf_labels = ['One', 'Two', 'Three', 'Four', 'Five']
+        lineageOT_tree = lineageot.inference.convert_newick_to_networkx(newick_tree, leaf_labels)
+
+        correct_tree = nx.DiGraph()
+        correct_tree.add_node('root', time = 0)
+        correct_tree.add_node(0, name = 'One', time = 0.8, time_to_parent = 0.2)
+        correct_tree.add_node(1, name = 'Two', time = 0.9, time_to_parent = 0.3)
+        correct_tree.add_node(2, name = 'Three', time = 1, time_to_parent = 0.5)
+        correct_tree.add_node(3, name = 'Four', time = 0.8, time_to_parent = 0.3)
+        correct_tree.add_node(4, name = 'Five', time = 0.7, time_to_parent = 0.7)
+
+        correct_tree.add_node("Unlabeled_0", name = "Unlabeled_0", time = 0.3, time_to_parent = 0.3)
+        correct_tree.add_node("Unlabeled_1", name = "Unlabeled_1", time = 0.6, time_to_parent = 0.3)
+        correct_tree.add_node("Unlabeled_2", name = "Unlabeled_2", time = 0.5, time_to_parent = 0.2)
+
+        correct_tree.add_edge("root", 4, time = 0.7)
+        correct_tree.add_edge("root", "Unlabeled_0", time = 0.3)
+        correct_tree.add_edge("Unlabeled_0", "Unlabeled_1", time = 0.3)
+        correct_tree.add_edge("Unlabeled_0", "Unlabeled_2", time = 0.2)
+        correct_tree.add_edge("Unlabeled_1", 0, time = 0.2)
+        correct_tree.add_edge("Unlabeled_1", 1, time = 0.3)
+        correct_tree.add_edge("Unlabeled_2", 2, time = 0.5)
+        correct_tree.add_edge("Unlabeled_2", 3, time = 0.3)
+
+        assert_tree_equality(correct_tree, lineageOT_tree)
