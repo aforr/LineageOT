@@ -64,6 +64,7 @@ print(clones)
 # For static lineage tracing data, we provide an algorithm to construct a tree of possibly-nested clones, assuming there are no barcode collisions across clones so the phylogeny is straightforward to reconstruct.
 # This step is not optimized. 
 # Feel free to use your own preferred tree construction algorithm.
+# You can import a tree saved in Newick format with ``lineageot.read_newick``.
 #
 # The tree should be formatted as a NetworkX ``DiGraph`` in the same way as the output of ``lineageot.fit_tree()``
 # Each node is annotated with ``'time'`` (which indicates either the time of sampling (for observed cells) or the time of division (for unobserved ancestors).

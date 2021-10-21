@@ -40,6 +40,7 @@ adata = anndata.AnnData(X = np.random.rand(n_cells, n_genes),
 # Before running LineageOT, we need to build a lineage tree from the observed barcodes.
 # This step is not optimized. We provide an implementation of a heuristic algorithm called neighbor joining.
 # Feel free to use your own preferred tree construction algorithm.
+# You can import a tree saved in Newick format with ``lineageot.read_newick``.
 #
 # The tree should be formatted as a NetworkX ``DiGraph`` in the same way as the output of ``lineageot.fit_tree()``
 # Each node is annotated with ``'time'`` (which indicates either the time of sampling (for observed cells) or the time of division (for unobserved ancestors).
