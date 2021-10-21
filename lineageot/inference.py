@@ -2,8 +2,9 @@
 
 import copy
 import ete3
-import numpy as np
 import networkx as nx
+import newick
+import numpy as np
 import warnings
 from cvxopt.solvers import qp as cvxopt_qp
 from cvxopt import matrix as cvxopt_matrix
@@ -1280,10 +1281,87 @@ def robinson_foulds(tree1, tree2):
 
 
 
+####################################
+# Converting trees between formats #
+####################################
 
+def convert_newick_to_networkx(newick_tree, leaf_labels, leaf_time = None, root_label = 'root', unlabeled_nodes_added = 0, at_global_root = True):
+    """
+    Converts a tree from the Newick package's format to LineageOT's annotated NetworkX DiGraph. Ignores existing annotations, except edge lengths.
 
+    Parameters
+    ----------
+    newick_tree : newick.Node or [newick.Node]
+        A tree loaded by the Newick package.
+    leaf_labels : list
+        The label of each leaf in the Newick tree, sorted to align with the gene expression AnnData object filtered to cells at the corresponding time
+    leaf_time : float (default None)
+        The time of sampling of the leaves. If unspecified, the root of the tree is assigned time 0.
+    root_label : str (default 'root')
+        The label of the root node of the tree
+    unlabeled_nodes_added : int (default 0)
+        The number of previously-unlabeled nodes that have already been added to the tree. Leave as 0 for any top-level use of the function.
+    at_global_root : bool (default True)
+        Whether the function is being called to convert a full tree or a subtree.
+    Returns
+    -------
+    tree : Networkx DiGraph
+        The saved tree, in LineageOT's format.
+        Each node is annotated with 'time_to_parent' and 'time' (which indicates either the time of sampling (for observed cells) or the time of division (for unobserved ancestors)).
+        Edges are directed from parent to child and are annotated with 'time' equal to the child node's 'time_to_parent'.
+        Observed node indices correspond to their index in leaf_labels.
+    """
+    assert(type(newick_tree) == newick.Node)
+    tree = nx.DiGraph()
+    if root_label == None:
+        # node was unlabeled in original Newick tree
+        # give it a new unique name
+        root_label = "Unlabeled_" + str(unlabeled_nodes_added)
+        unlabeled_nodes_added = unlabeled_nodes_added + 1
+    root_name = root_label
+    if len(newick_tree.descendants) == 0:
+        # at a leaf, use index of label as name
+        if not (root_label in leaf_labels):
+            raise ValueError("One of the leaves in the Newick tree does not have a corresponding label in leaf_labels")
+        root_label = leaf_labels.index(root_label)
+        
+    tree.add_node(root_label, name = root_name)
+    
+    for child in newick_tree.descendants:
+        # convert tree for child
+        subtree, unlabeled_nodes_added, new_child_label = convert_newick_to_networkx(child, leaf_labels, leaf_time = leaf_time, root_label = child.name, unlabeled_nodes_added = unlabeled_nodes_added, at_global_root = False)
+        
+        # add to existing tree
+        tree = nx.union(tree, subtree) # not sure this is efficient
+        
+        # annotate edge times
+        tree.add_edge(root_label, new_child_label, time=child.length)
+        tree.nodes[new_child_label]['time_to_parent'] = child.length
 
+    # annotate node times
 
+    if leaf_time == None:
+        # reference time is global root, do nothing in recursive case
+        if at_global_root:
+            tree.nodes[root_label]['time'] = 0
+            add_node_times_from_division_times(tree, current_node = root_label) 
+    else:
+        if len(newick_tree.descendants) == 0:
+            # at leaf
+            tree.nodes[root_label]['time'] = leaf_time
+        else:
+            # add time annotations backwards
+            times_from_children = np.array([tree.nodes[child]['time'] - tree.nodes[child]['time_to_parent'] for child in tree.successors(root_label)])
+            if np.all(times_from_children == times_from_children[0]):
+                # time labels from different branches are consistent
+                tree.nodes[root_label]['time'] = times_from_children[0]
+            else:
+                raise ValueError("Edge length annotations in Newick tree are not consistent with a single sampling time for all leaves. Consider using the global root as a reference time.")
+
+    if at_global_root:
+        return tree
+    else:
+        return tree, unlabeled_nodes_added, root_label
 
 
 def tree_to_ete3(tree):
