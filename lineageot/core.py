@@ -105,7 +105,7 @@ def read_newick(filename, leaf_labels, leaf_time = None):
 
 
 
-def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'time', state_key = None, epsilon = 0.05, normalize_cost = True, ot_method = 'sinkhorn'):
+def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'time', state_key = None, epsilon = 0.05, normalize_cost = True, ot_method = 'sinkhorn', marginal_1 = [], marginal_2 = [], balance_reg = np.inf):
     """
     Fits a LineageOT coupling between the cells in adata at time_1 and time_2. 
     In the process, annotates the lineage tree with observed and estimated cell states.
@@ -131,9 +131,17 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
         Normalizing this way allows us to choose a reasonable default epsilon for data of any scale
     ot_method : str (default 'sinkhorn')
         Method used for the optimal transport solver. 
-        Either 'sinkhorn', 'greenkhorn', 'sinkhorn_stabilized' or 'sinkhorn_epsilon_scaling'.
+        Choose from 'sinkhorn', 'greenkhorn', 'sinkhorn_stabilized' and 'sinkhorn_epsilon_scaling' for balanced transport
+        and 'sinkhorn', 'sinkhorn_stabilized', and 'sinkhorn_reg_scaling' for unbalanced transport.
         'sinkhorn' is recommended unless you encounter numerical problems.
         See PythonOT docs for more details.
+    marginal_1 : Vector (default [])
+        Marginal distribution (relative growth rates) for cells at time 1. If empty, assumed uniform.
+    marginal_2 : Vector (default [])
+        Marginal distribution (relative growth rates) for cells at time 2. If empty, assumed uniform.
+    balance_reg : Number
+        Regularization parameter for unbalanced transport. Smaller values allow more flexibility in growth rates. If infinite, marginals are treated as hard constraints.
+    
     Returns
     -------
     coupling : AnnData
@@ -169,7 +177,10 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
         lineageOT_cost = lineageOT_cost/np.median(lineageOT_cost)
 
     # fit coupling
-    coupling_matrix = ot.sinkhorn([], [], lineageOT_cost, epsilon, method = ot_method)
+    if balance_reg == np.inf:
+        coupling_matrix = ot.sinkhorn(marginal_1, marginal_2, lineageOT_cost, epsilon, method = ot_method)
+    else:
+        coupling_matrix = ot.unbalanced.sinkhorn_unbalanced(marginal_1, marginal_2, lineageOT_cost, epsilon, balance_reg, method = ot_method)
 
 
     # reformat coupling as anndata
