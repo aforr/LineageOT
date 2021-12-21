@@ -1039,9 +1039,8 @@ def make_clone_reference_tree(clone_matrix, clone_times, root_time = -np.inf):
     for level, labeling_time in zip(range(1, len(unique_times)), unique_times[1:]):
         current_clone_indices = np.nonzero(clone_times == labeling_time)[0]
         current_clone_labels = [clone_labels[i] for i in current_clone_indices]
-        time_to_parents = labeling_time - unique_times[level-1]
 
-        clone_reference_tree.add_nodes_from(current_clone_labels, time = labeling_time, time_to_parent = time_to_parents)
+        clone_reference_tree.add_nodes_from(current_clone_labels, time = labeling_time)
 
         for clone_index in current_clone_indices:
             parent_index = find_parent_clone(clone_index, clone_matrix, clone_times)
@@ -1049,7 +1048,11 @@ def make_clone_reference_tree(clone_matrix, clone_times, root_time = -np.inf):
                 parent_label = 'root'
             else:
                 parent_label = clone_labels[parent_index]
-            clone_reference_tree.add_edge(parent_label, clone_labels[clone_index], time = time_to_parents)
+
+            time_to_parent = labeling_time - clone_reference_tree.nodes[parent_label]['time']
+            
+            clone_reference_tree.nodes[clone_labels[clone_index]]['time_to_parent'] = time_to_parent
+            clone_reference_tree.add_edge(parent_label, clone_labels[clone_index], time = time_to_parent)
 
     return clone_reference_tree
 
