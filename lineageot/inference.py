@@ -928,7 +928,7 @@ def make_tree_from_nonnested_clones(clone_matrix, time, root_time_factor = 1000)
     return fitted_tree
 
 
-def make_tree_from_clones(clone_matrix, time, clone_times, root_time = None):
+def make_tree_from_clones(clone_matrix, time, clone_times, root_time = -np.inf):
     """
     Adds a leaf for each row in clone_matrix to clone_reference_tree. The parent is set as the
     clone that the cell is a member of with the latest labeling time.
@@ -943,9 +943,9 @@ def make_tree_from_clones(clone_matrix, time, clone_times, root_time = None):
         Each entry has the time of labeling of the corresponding clone.
     time: Number
         The time of sampling of cells.
-    root_time: Number, default None
+    root_time: Number, default -np.inf
         The time of the most recent common ancestor of all clones. 
-        If None, automatically set to a time far in the past 
+        If -np.inf, clones are effectively treated as unrelated
 
     Returns
     -------
@@ -1002,7 +1002,7 @@ def get_parent_clone_of_leaf(leaf, clone_matrix, clone_times):
         return candidate_clones[maximal_time_indices[0]]
 
 
-def make_clone_reference_tree(clone_matrix, clone_times, root_time = None):
+def make_clone_reference_tree(clone_matrix, clone_times, root_time = -np.inf):
     """
     Makes a tree with nodes for each clone.
     
@@ -1012,17 +1012,15 @@ def make_clone_reference_tree(clone_matrix, clone_times, root_time = None):
         Each entry is 1 if the corresponding cell belongs to the corresponding clone and zero otherwise.
     clone_times: Vector of length num_clones
         Each entry has the time of labeling of the corresponding clone.
-    root_time: Number, default None
+    root_time: Number, default -np.inf
         The time of the most recent common ancestor of all clones. 
-        If None, automatically set to a time far in the past 
+        If -np.inf, clone subtrees are effectively treated independently.
 
     Returns
     -------
     clone_reference_tree: NetworkX DiGraph
         A tree of clones (not sampled cells), annotated with edge and node times
     """
-    if root_time == None:
-        root_time = np.min(clone_times) - 1000*(np.maximum(1, np.max(clone_times) - np.min(clone_times)))
 
     n_cells, n_clones = clone_matrix.shape
     unique_times = np.unique(clone_times) # output is sorted
