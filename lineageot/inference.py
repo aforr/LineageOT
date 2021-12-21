@@ -773,7 +773,29 @@ def split_edge(tree, edge, new_node):
 
 
 
+def get_components(graph, edge_length_key = 'time'):
+    """
+    Returns subgraph views corresponding to connected components of the graph
+    if edges of infinite length are removed
+    
+    Parameters
+    ----------
+    graph: NetworkX graph
+    edge_length_key: default 'time'
 
+    Returns
+    -------
+    subgraphs: List of NetworkX subgraph views
+    """
+    # copying graph as undirected
+    g = nx.Graph(graph)
+    
+    edges_to_remove = [e for e in g.edges if g.edges[e][edge_length_key] == np.inf]
+    g.remove_edges_from(edges_to_remove)
+    
+    component_node_sets = nx.connected_components(g)
+
+    return [graph.subgraph(component_nodes) for component_nodes in component_node_sets] 
 
 
 
@@ -792,6 +814,11 @@ def add_conditional_means_and_variances(tree, observed_nodes):
     nodes, conditional on the observed values of 'x' in observed_nodes,
     assuming that differences along edges are Gaussian with variance equal to 
     the length of the edge.
+
+    In doing so, also adds inverse time annotations to edges.
+
+    If no nodes in tree are observed, inverse time annotations are added but
+    conditional means and variances are not (as there is nothing to condition on).
     """
     node_list = [n for n in tree.nodes]
     
@@ -800,7 +827,11 @@ def add_conditional_means_and_variances(tree, observed_nodes):
     
     unobserved_nodes = [n for n in node_list if not n in observed_nodes]
     # Resorting so the order of indices in all matrices match
+    # and removing observed_nodes not in tree
     observed_nodes = [n for n in node_list if n in observed_nodes]
+    if len(observed_nodes) == 0:
+        # no observed nodes in this component
+        return
     unobserved_node_indices = [i for i in range(len(node_list)) if not node_list[i] in observed_nodes]
     observed_node_indices = [i for i in range(len(node_list)) if node_list[i] in observed_nodes]
     

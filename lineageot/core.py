@@ -165,10 +165,15 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
     inf.add_nodes_at_time(lineage_tree_t2, time_1)
 
     observed_nodes = [n for n in inf.get_leaves(lineage_tree_t2, include_root = False)]
-    inf.add_conditional_means_and_variances(lineage_tree_t2, observed_nodes)
 
+    # Split tree into components that share information
+    components = inf.get_components(lineage_tree_t2)
+    # Add annotations for each component separately
+    for comp in components:
+        inf.add_conditional_means_and_variances(comp, observed_nodes)
+
+    # collect predicted ancestral states
     ancestor_info = inf.get_ancestor_data(lineage_tree_t2, time_1)
-
 
     # compute cost matrix
     lineageOT_cost = ot.utils.dist(state_arrays['early'], ancestor_info[0])@np.diag(ancestor_info[1]**(-1))
