@@ -456,11 +456,11 @@ class Test_Tree_Fitting():
 
         correct_tree = nx.DiGraph()
         correct_tree.add_nodes_from([0, 1, 2, 3], time = 10, time_to_parent = 10)
-        correct_tree.add_nodes_from(['clone_0', 'clone_1'], time = 0, time_to_parent = 1000)
-        correct_tree.add_node('root', time = -1000)
+        correct_tree.add_nodes_from(['clone_0', 'clone_1'], time = 0, time_to_parent = np.inf)
+        correct_tree.add_node('root', time = -np.inf)
 
         correct_tree.add_edges_from([('clone_0', 0), ('clone_0', 1), ('clone_1', 2), ('clone_1', 3)], time = 10)
-        correct_tree.add_edges_from([('root', 'clone_0'), ('root', 'clone_1')], time = 1000)
+        correct_tree.add_edges_from([('root', 'clone_0'), ('root', 'clone_1')], time = np.inf)
 
         assert_tree_equality(correct_tree, lineage_tree_t2)
 
@@ -472,13 +472,13 @@ class Test_Tree_Fitting():
 
         correct_tree = nx.DiGraph()
         correct_tree.add_nodes_from([0, 1, 2, 3, 4, 5, 6, 7], time = 10, time_to_parent = 3)
-        correct_tree.add_nodes_from(['clone_0', 'clone_1'], time = 0, time_to_parent = 7000) # day 0 clones
+        correct_tree.add_nodes_from(['clone_0', 'clone_1'], time = 0, time_to_parent = np.inf) # day 0 clones
         correct_tree.add_nodes_from(['clone_2', 'clone_3', 'clone_4', 'clone_5'], time = 7, time_to_parent = 7) # day 7 clones
-        correct_tree.add_node('root', time = -7000)
+        correct_tree.add_node('root', time = -np.inf)
 
         correct_tree.add_edges_from([('clone_0', 'clone_2'), ('clone_0', 'clone_3'), ('clone_1', 'clone_4'), ('clone_1', 'clone_5')], time = 7)
         correct_tree.add_edges_from([('clone_2', 0), ('clone_2', 1), ('clone_3', 2), ('clone_3', 3), ('clone_4', 4), ('clone_4', 5), ('clone_5', 6), ('clone_5', 7)], time = 3)
-        correct_tree.add_edges_from([('root', 'clone_0'), ('root', 'clone_1')], time = 7000)
+        correct_tree.add_edges_from([('root', 'clone_0'), ('root', 'clone_1')], time = np.inf)
         assert_tree_equality(correct_tree, lineage_tree_t2)
 
 
