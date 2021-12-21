@@ -773,7 +773,29 @@ def split_edge(tree, edge, new_node):
 
 
 
+def get_components(graph, edge_length_key = 'time'):
+    """
+    Returns subgraph views corresponding to connected components of the graph
+    if edges of infinite length are removed
+    
+    Parameters
+    ----------
+    graph: NetworkX graph
+    edge_length_key: default 'time'
 
+    Returns
+    -------
+    subgraphs: List of NetworkX subgraph views
+    """
+    # copying graph as undirected
+    g = nx.Graph(graph)
+    
+    edges_to_remove = [e for e in g.edges if g.edges[e][edge_length_key] == np.inf]
+    g.remove_edges_from(edges_to_remove)
+    
+    component_node_sets = nx.connected_components(g)
+
+    return [graph.subgraph(component_nodes) for component_nodes in component_node_sets] 
 
 
 
