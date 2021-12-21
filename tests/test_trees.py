@@ -328,7 +328,34 @@ class Test_Tree_Manipulation():
         assert((e1 == e2).all())
         assert((b1 == b2).all())
 
+    def test_split_connected_tree(self):
+        """
+        Tests whether get_components correctly returns all of
+        a connected tree
+        """
+        
+        components = lineageot.inference.get_components(self.tree)
+        assert_tree_equality(self.tree, components[0])
+        assert len(components) == 1
 
+
+    def test_split_small_tree(self):
+        """
+        Tests whether a tree is split into two components
+        """
+        tree = nx.DiGraph()
+        tree.add_edges_from([('root', 1, {"time" : 5}), (1,2, {"time" : np.inf})])
+
+        components = lineageot.inference.get_components(tree)
+        comp_1 = nx.DiGraph()
+        comp_1.add_edges_from([('root', 1, {"time" : 5})])
+
+        assert_tree_equality(comp_1, components[0])
+        assert [n for n in components[1].nodes()] == [2]
+        assert len(components[1].edges()) == 0
+        
+
+        
 
 
 
