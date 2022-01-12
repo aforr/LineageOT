@@ -175,8 +175,14 @@ def fit_lineage_coupling(adata, time_1, time_2, lineage_tree_t2, time_key = 'tim
     # collect predicted ancestral states
     ancestor_info = inf.get_ancestor_data(lineage_tree_t2, time_1)
 
+    # change backend of ancestor_info to AnnData ArrayView
+    # to match state_arrays['early'], because POT v0.8 requires
+    # matching backends
+    ancestor_states = anndata.AnnData(X = ancestor_info[0])[:,:].X
+
     # compute cost matrix
-    lineageOT_cost = ot.utils.dist(state_arrays['early'], ancestor_info[0])@np.diag(ancestor_info[1]**(-1))
+    # (converted to numpy array to match default marginal backend)
+    lineageOT_cost = np.array(ot.utils.dist(state_arrays['early'], ancestor_states)@np.diag(ancestor_info[1]**(-1)))
 
     if normalize_cost:
         lineageOT_cost = lineageOT_cost/np.median(lineageOT_cost)
