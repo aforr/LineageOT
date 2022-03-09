@@ -3,6 +3,7 @@ This file summarizes changes to the package since version 0.1.
 
 ## [Unreleased]
 
+## [0.2.0] - 2022-01-12
 ### Added
 - read_newick() to import lineage trees from Newick format
 - fit_tree() now can create lineage trees from clone labels without barcode collisions
