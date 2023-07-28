@@ -84,11 +84,11 @@ class Cell:
         if seed != None:
             self.seed = seed
         else:
-            self.seed = np.random.randint(2**32)
+            self.seed = np.random.randint(2**31)
         return
 
     def reset_seed(self):
-        self.seed = np.random.randint(2**32)
+        self.seed = np.random.randint(2**31)
 
     def deepcopy(self):
         return copy.deepcopy(self)
@@ -314,7 +314,7 @@ def evolve_b(initial_barcode, time, params):
     # we want the mutations that occur in time t1 to be a subset of the
     # mutations that occur in time t2 if t2 > t1.
 
-    mutation_seed = np.random.randint(2**32)
+    mutation_seed = np.random.randint(2**31)
 
     rate = time*params.mutation_rate
     if (rate > 10) & params.enforce_barcode_reproducibility:

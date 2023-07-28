@@ -2,7 +2,8 @@
 This file summarizes changes to the package since version 0.1.
 
 ## [Unreleased]
-
+### Fixed
+- Seeds set for simulations are not out of bounds for int32
 ## [0.2.0] - 2022-01-12
 ### Added
 - read_newick() to import lineage trees from Newick format
